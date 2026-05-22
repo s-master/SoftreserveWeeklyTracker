@@ -1,0 +1,39 @@
+@model List<SoftreserveTracker.Web.Models.ViewModels.ItemOverviewRowViewModel>
+@{
+    ViewData["Title"] = Localizer["Nav_Items"];
+    var token = ViewBag.Token;
+}
+
+<div class="page-header">
+    <h1 class="h2">@Localizer["Overview_Items_Title"]</h1>
+</div>
+
+<div class="table-softres-wrap table-softres-scroll">
+    <table class="table table-softres table-striped w-100" id="itemTable">
+        <thead>
+            <tr>
+                <th class="col-item">@Localizer["Col_Item"]</th>
+                <th class="col-compact">@Localizer["Col_Player"]</th>
+                <th class="col-compact">@Localizer["Col_CurrentPlusOne"]</th>
+                <th class="col-compact">@Localizer["Col_Received"]</th>
+                <th class="col-compact">@Localizer["Col_ReservedAt"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td class="col-item"><partial name="_ItemLink" model="row.ItemId" /></td>
+                    <td class="col-compact"><partial name="_PlayerDisplay" model="row.Player" /></td>
+                    <td class="col-compact"><span class="badge bg-info text-dark">@row.CurrentPlusOne</span></td>
+                    <td class="col-compact">@(row.HasReceived ? Localizer["Yes"].Value : Localizer["No"].Value)</td>
+                    <td class="col-compact">@(row.LastReservedAt?.ToString("g") ?? "-")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>$(function () { initSoftresDataTable('#itemTable', { order: [[0, 'asc'], [2, 'desc']] }); });</script>
+}

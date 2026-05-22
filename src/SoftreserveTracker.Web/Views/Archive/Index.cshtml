@@ -1,0 +1,43 @@
+@model List<SoftreserveTracker.Web.Models.ViewModels.ArchiveFileViewModel>
+@{
+    ViewData["Title"] = Localizer["Nav_Archive"];
+    var token = ViewBag.Token;
+}
+
+<div class="page-header">
+    <h1 class="h2"><i class="fa-solid fa-box-archive me-2"></i>@Localizer["Archive_Title"]</h1>
+</div>
+
+<div class="table-softres-wrap table-softres-scroll">
+    <table class="table table-softres table-striped w-100" id="archiveTable">
+        <thead>
+            <tr>
+                <th class="col-compact">@Localizer["Col_Date"]</th>
+                <th class="col-item">@Localizer["Col_File"]</th>
+                <th class="col-compact">@Localizer["Col_Type"]</th>
+                <th class="col-compact">Session</th>
+                <th class="col-compact"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var file in Model)
+            {
+                <tr>
+                    <td class="col-compact">@file.UploadedAt.ToString("g")</td>
+                    <td class="col-item">@file.OriginalFileName</td>
+                    <td class="col-compact">@file.FileType</td>
+                    <td class="col-compact">@file.SessionDate.ToString("yyyy-MM-dd") (#@file.RaidSessionId)</td>
+                    <td class="col-compact text-end">
+                        <a href="@Url.Action("Download", "Archive", new { token, id = file.Id })">
+                            <i class="fa-solid fa-download"></i> @Localizer["Action_Download"]
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>$(function () { initSoftresDataTable('#archiveTable', { order: [[0, 'desc']] }); });</script>
+}

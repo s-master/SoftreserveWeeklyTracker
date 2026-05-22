@@ -1,0 +1,110 @@
+﻿@using Microsoft.AspNetCore.Localization
+@using Microsoft.Extensions.Localization
+@using SoftreserveTracker.Web.Resources
+@inject IStringLocalizer<SharedResource> Localizer
+@inject IWebHostEnvironment HostEnvironment
+@inject IConfiguration Configuration
+@{
+    var requestCulture = Context.Features.Get<IRequestCultureFeature>()?.RequestCulture;
+    var culture = requestCulture?.UICulture?.TwoLetterISOLanguageName ?? "de";
+    var wowheadLocale = culture == "de" ? "3" : "0";
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+    var debugEnabled = HostEnvironment.IsDevelopment();
+}
+<!DOCTYPE html>
+<html lang="@culture" data-bs-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @Localizer["Home_Title"]</title>
+    <link rel="icon" type="image/png" href="~/favicon.png" asp-append-version="true" />
+    <link rel="apple-touch-icon" href="~/img/logo.png" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-dark navbar-softres mb-4">
+            <div class="container-fluid container-app">
+                <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
+                    <img src="~/img/logo.png" alt="Nüsslisalat" class="navbar-logo" asp-append-version="true" />
+                    <span>@Localizer["Home_Title"]</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mainNav">
+                    <ul class="navbar-nav me-auto">
+                        @if (ViewBag.Token != null)
+                        {
+                            var token = ViewBag.Token;
+                            <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Roster", new { token })">@Localizer["Nav_Dashboard"]</a></li>
+                            <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Upload", new { token })">@Localizer["Nav_Upload"]</a></li>
+                            <li class="nav-item"><a class="nav-link" href="@Url.Action("Players", "Overview", new { token })">@Localizer["Nav_Players"]</a></li>
+                            <li class="nav-item"><a class="nav-link" href="@Url.Action("Items", "Overview", new { token })">@Localizer["Nav_Items"]</a></li>
+                            <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Archive", new { token })">@Localizer["Nav_Archive"]</a></li>
+                        }
+                    </ul>
+                    <ul class="navbar-nav align-items-center">
+                        @if (debugEnabled)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link nav-debug-link" asp-controller="Debug" asp-action="Index">
+                                    <i class="fa-solid fa-bug me-1"></i>@Localizer["Nav_Debug"]
+                                </a>
+                            </li>
+                        }
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
+                                <img src="~/img/@(culture == "de" ? "de_DE" : "en_US").png" alt="" class="lang-flag" asp-append-version="true" />
+                                @Localizer["Nav_Language"]
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center gap-2 @(culture == "de" ? "active" : "")" asp-controller="Culture" asp-action="Set" asp-route-culture="de" asp-route-returnUrl="@returnUrl">
+                                        <img src="~/img/de_DE.png" alt="" class="lang-flag" asp-append-version="true" /> Deutsch
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center gap-2 @(culture == "en" ? "active" : "")" asp-controller="Culture" asp-action="Set" asp-route-culture="en" asp-route-returnUrl="@returnUrl">
+                                        <img src="~/img/en_US.png" alt="" class="lang-flag" asp-append-version="true" /> English
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container-fluid container-app pb-5">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-softres">@TempData["Success"]</div>
+        }
+        @if (TempData["Warnings"] != null)
+        {
+            <div class="alert alert-warning alert-softres">@TempData["Warnings"]</div>
+        }
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+    <footer>
+        <div class="container-fluid container-app text-center small d-flex flex-column align-items-center gap-2">
+            <img src="~/img/logo.png" alt="" class="footer-logo" asp-append-version="true" />
+            <span>Nüsslisalat Softreserve Weekly Tracker <span class="text-secondary">·</span> TBC Anniversary</span>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.min.js"></script>
+    <script>const whTooltips = { colorLinks: true, iconizeLinks: true, renameLinks: true };</script>
+    <script src="https://wow.zamimg.com/js/tooltips.js?locale=@wowheadLocale"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

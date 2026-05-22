@@ -1,0 +1,73 @@
+@model IReadOnlyList<SoftreserveTracker.Web.Services.Debug.DebugRosterSummary>
+@{
+    ViewData["Title"] = Localizer["Debug_Title"];
+}
+
+<div class="page-header">
+    <h1 class="h2"><i class="fa-solid fa-bug me-2"></i>@Localizer["Debug_Title"]</h1>
+    <p class="text-secondary mb-0">@Localizer["Debug_Subtitle"]</p>
+</div>
+
+<div class="alert alert-warning alert-softres">
+    <i class="fa-solid fa-triangle-exclamation me-2"></i>@Localizer["Debug_Warning"]
+</div>
+
+<div class="mb-4">
+    <a class="btn btn-accent" asp-controller="Home" asp-action="Index">
+        <i class="fa-solid fa-plus me-1"></i>@Localizer["Home_CreateRoster"]
+    </a>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-softres">@Localizer["Debug_NoRosters"]</div>
+}
+else
+{
+    <div class="table-softres-wrap table-softres-scroll">
+        <table class="table table-softres table-striped mb-0">
+            <thead>
+                <tr>
+                    <th>@Localizer["Home_RosterName"]</th>
+                    <th>@Localizer["Debug_Created"]</th>
+                    <th>@Localizer["Debug_Weeks"]</th>
+                    <th>@Localizer["Debug_Sessions"]</th>
+                    <th>@Localizer["Debug_Players"]</th>
+                    <th>@Localizer["Debug_Link"]</th>
+                    <th class="text-end">@Localizer["Debug_Actions"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var roster in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold">@roster.Name</td>
+                        <td>@roster.CreatedAt.ToString("g")</td>
+                        <td>@roster.WeekCount</td>
+                        <td>@roster.SessionCount</td>
+                        <td>@roster.PlayerCount</td>
+                        <td>
+                            <a href="@Url.Action("Index", "Roster", new { token = roster.AccessToken })">/r/@roster.AccessToken</a>
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <form asp-action="ClearImports" asp-route-rosterId="@roster.Id" method="post" class="d-inline"
+                                  onsubmit="return confirm('@Localizer["Debug_ConfirmClear"]');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-warning">
+                                    @Localizer["Debug_ClearImports"]
+                                </button>
+                            </form>
+                            <form asp-action="DeleteRoster" asp-route-rosterId="@roster.Id" method="post" class="d-inline ms-1"
+                                  onsubmit="return confirm('@Localizer["Debug_ConfirmDelete"]');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    @Localizer["Debug_DeleteRoster"]
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

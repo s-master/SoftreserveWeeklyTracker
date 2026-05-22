@@ -1,0 +1,12 @@
+@model int
+@using Microsoft.AspNetCore.Localization
+@{
+    var requestCulture = ViewContext.HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture;
+    var culture = requestCulture?.UICulture?.TwoLetterISOLanguageName ?? "de";
+    var isGerman = culture == "de";
+    var wowheadHost = isGerman ? "de.wowhead.com" : "www.wowhead.com";
+    var wowheadDomain = isGerman ? "de" : "www";
+}
+<a href="https://@wowheadHost/tbc/item=@Model"
+   data-wowhead="item=@Model&domain=@wowheadDomain"
+   class="item-link">@Model</a>

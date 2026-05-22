@@ -1,0 +1,20 @@
+@model string?
+@{
+    var classification = Model?.Trim().ToUpperInvariant();
+}
+@if (classification == "MS")
+{
+    <span class="badge badge-roll-ms">MS</span>
+}
+else if (classification == "OS")
+{
+    <span class="badge badge-roll-os">OS</span>
+}
+else if (!string.IsNullOrWhiteSpace(Model))
+{
+    <span class="text-secondary">@Model</span>
+}
+else
+{
+    <span class="text-secondary">-</span>
+}

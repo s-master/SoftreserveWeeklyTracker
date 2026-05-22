@@ -1,0 +1,34 @@
+## Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+
+## Build
+bin/
+obj/
+out/
+publish/
+
+## SQLite & uploads
+src/SoftreserveTracker.Web/App_Data/
+!src/SoftreserveTracker.Web/App_Data/.gitkeep
+
+## OS
+Thumbs.db
+.DS_Store
+
+## Secrets & local config
+appsettings.Development.json
+*.db
+*.db-shm
+*.db-wal
+
+## Private / local only (never commit)
+deploy/
+tools/
+DATA_input/
+DATA_verify/
+
+## Accidental root assets
+/[0-9a-f-]{36}.png

@@ -1,0 +1,45 @@
+@model List<SoftreserveTracker.Web.Models.ViewModels.ReservationRowViewModel>
+@{
+    var week = ViewBag.Week as SoftreserveTracker.Web.Models.Entities.RaidWeek;
+    ViewData["Title"] = $"{Localizer["Dashboard_RaidWeek"]} {week!.WeekNumber}";
+    var token = ViewBag.Token;
+}
+
+<div class="page-header">
+    <h1 class="h2">@Localizer["Dashboard_RaidWeek"] @week.WeekNumber</h1>
+    <p class="text-secondary mb-0">@week.PeriodStart.ToString("g") &mdash; @week.PeriodEnd.ToString("g")</p>
+</div>
+
+<div class="table-softres-wrap table-softres-scroll">
+    <table class="table table-softres table-striped w-100" id="weekTable">
+        <thead>
+            <tr>
+                <th class="col-compact">@Localizer["Col_Player"]</th>
+                <th class="col-item">@Localizer["Col_Item"]</th>
+                <th class="col-compact">@Localizer["Col_ReservedAt"]</th>
+                <th class="col-compact">@Localizer["Col_PlusOneDelta"]</th>
+                <th class="col-compact">@Localizer["Col_CurrentPlusOne"]</th>
+                <th class="col-compact">@Localizer["Col_Received"]</th>
+                <th>@Localizer["Col_Reason"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td class="col-compact"><partial name="_PlayerDisplay" model="row.Player" /></td>
+                    <td class="col-item"><partial name="_ItemLink" model="row.ItemId" /></td>
+                    <td class="col-compact">@(row.ReservedAt?.ToString("g") ?? "-")</td>
+                    <td class="col-compact">+@row.PlusOneDelta</td>
+                    <td class="col-compact">@row.CurrentPlusOne</td>
+                    <td class="col-compact">@(row.PlayerReceived ? Localizer["Yes"].Value : Localizer["No"].Value)</td>
+                    <td><partial name="_PlusOneReason" model="row.Reason" /></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>$(function () { initSoftresDataTable('#weekTable'); });</script>
+}

@@ -1,0 +1,30 @@
+@model SoftreserveTracker.Web.Models.ViewModels.UploadRaidViewModel
+@{
+    ViewData["Title"] = Localizer["Upload_Title"];
+    var token = ViewBag.Token;
+}
+
+<div class="page-header">
+    <h1 class="h2"><i class="fa-solid fa-upload me-2"></i>@Localizer["Upload_Title"]</h1>
+    <p class="text-secondary mb-0">@Localizer["Upload_Subtitle"]</p>
+</div>
+
+<div class="card-softres p-4 col-lg-8">
+    <form asp-action="Index" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="mb-3">
+            <label asp-for="Files" class="form-label">@Localizer["Upload_Files"]</label>
+            <input asp-for="Files" type="file" class="form-control" multiple accept=".csv,.txt,.json" />
+            <div class="form-text">@Localizer["Upload_FilesHint"]</div>
+            <span asp-validation-for="Files" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-accent">
+            <i class="fa-solid fa-file-import me-1"></i>@Localizer["Upload_Submit"]
+        </button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,20 @@
+﻿@model ErrorViewModel
+@inject IWebHostEnvironment HostEnvironment
+@{
+    ViewData["Title"] = Localizer["Error_Title"];
+}
+
+<h1 class="h3 text-danger">@Localizer["Error_Title"]</h1>
+<p class="text-secondary">@Localizer["Error_Message"]</p>
+
+@if (Model.ShowRequestId)
+{
+    <p class="small text-secondary">
+        @Localizer["Error_RequestId"]: <code>@Model.RequestId</code>
+    </p>
+}
+
+@if (HostEnvironment.IsDevelopment())
+{
+    <p class="small text-secondary mt-4">@Localizer["Error_DevelopmentHint"]</p>
+}

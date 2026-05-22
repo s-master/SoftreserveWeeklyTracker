@@ -1,0 +1,6 @@
+@model string
+@{
+    var css = Model == "Ssc" ? "badge-raid-ssc" : "badge-raid-tk";
+    var label = Model == "Ssc" ? Localizer["RaidType_Ssc"].Value : Localizer["RaidType_Tk"].Value;
+}
+<span class="badge @css">@label</span>

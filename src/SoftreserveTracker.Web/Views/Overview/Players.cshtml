@@ -1,0 +1,71 @@
+@model List<SoftreserveTracker.Web.Models.ViewModels.PlayerOverviewRowViewModel>
+@{
+    ViewData["Title"] = Localizer["Nav_Players"];
+    var token = ViewBag.Token;
+}
+
+<div class="page-header">
+    <h1 class="h2">@Localizer["Overview_Players_Title"]</h1>
+</div>
+
+<div class="table-softres-wrap table-softres-scroll">
+    <table class="table table-softres table-striped w-100" id="playerTable">
+        <thead>
+            <tr>
+                <th class="col-compact">@Localizer["Col_Player"]</th>
+                <th class="col-item">@Localizer["Col_Item"]</th>
+                <th class="col-compact">@Localizer["Col_CurrentPlusOne"]</th>
+                <th class="col-compact">@Localizer["Col_ReservedAt"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int? lastPlayerId = null;
+                var isFirstRow = true;
+            }
+            @foreach (var row in Model)
+            {
+                var isNewPlayer = row.Player.PlayerId != lastPlayerId;
+                lastPlayerId = row.Player.PlayerId;
+                <tr class="@(!isFirstRow && isNewPlayer ? "player-group-start" : null)">
+                    <td class="col-compact">
+                        @if (isNewPlayer)
+                        {
+                            <partial name="_PlayerDisplay" model="row.Player" />
+                        }
+                        else
+                        {
+                            <span class="visually-hidden">@row.Player.Name</span>
+                        }
+                    </td>
+                    <td class="col-item"><partial name="_ItemLink" model="row.ItemId" /></td>
+                    <td class="col-compact"><span class="badge bg-info text-dark">@row.CurrentPlusOne</span></td>
+                    <td class="col-compact">@(row.LastReservedAt?.ToString("g") ?? "-")</td>
+                </tr>
+                isFirstRow = false;
+            }
+        </tbody>
+    </table>
+</div>
+
+@{
+    var allPlayers = ViewBag.AllPlayers as List<SoftreserveTracker.Web.Models.ViewModels.PlayerLinkViewModel>;
+}
+@if (allPlayers != null && allPlayers.Count > 0)
+{
+    <div class="card-softres p-3 mt-4">
+        <h2 class="h6 mb-3">@Localizer["Player_AllPlayers"]</h2>
+        <div class="player-chip-grid">
+            @foreach (var p in allPlayers)
+            {
+                <a class="player-chip" href="@Url.Action("Player", "Overview", new { token, playerId = p.Id })">
+                    <partial name="_PlayerDisplay" model="@(new PlayerDisplayViewModel { Name = p.Name, PlayerId = p.Id, PlayerClass = p.PlayerClass, LinkName = false, LinkClassIcon = false })" />
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>$(function () { initSoftresDataTable('#playerTable', { ordering: false }); });</script>
+}

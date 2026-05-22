@@ -1,0 +1,69 @@
+@model List<SoftreserveTracker.Web.Models.ViewModels.WeekSummaryViewModel>
+@{
+    ViewData["Title"] = Localizer["Dashboard_Title"];
+    var token = ViewBag.Token;
+}
+
+<div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+        <h1 class="h2 mb-1">@ViewBag.RosterName</h1>
+        <p class="text-secondary mb-0">@Localizer["Dashboard_Subtitle"]</p>
+    </div>
+    <a class="btn btn-accent" href="@Url.Action("Index", "Upload", new { token })">
+        <i class="fa-solid fa-upload me-1"></i>@Localizer["Nav_Upload"]
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-softres">@Localizer["Dashboard_NoData"]</div>
+}
+else
+{
+    foreach (var week in Model)
+    {
+        <div class="card-softres p-3 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">
+                    <i class="fa-solid fa-calendar-week me-2"></i>@Localizer["Dashboard_RaidWeek"] @week.WeekNumber
+                </h2>
+                <a href="@Url.Action("Details", "Weeks", new { token, id = week.Id })" class="btn btn-sm btn-outline-light">
+                    @Localizer["Dashboard_ViewWeek"]
+                </a>
+            </div>
+            <p class="small text-secondary">
+                @week.PeriodStart.ToString("g") &mdash; @week.PeriodEnd.ToString("g")
+            </p>
+            <div class="table-responsive">
+                <table class="table table-softres table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>@Localizer["Col_Date"]</th>
+                            <th>@Localizer["Col_Raid"]</th>
+                            <th>@Localizer["Col_SoftresId"]</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var session in week.Sessions)
+                        {
+                            <tr>
+                                <td>@session.SessionDate.ToString("yyyy-MM-dd")</td>
+                                <td><partial name="_RaidTypeBadge" model="session.RaidType" /></td>
+                                <td class="text-secondary">@(session.SoftresId ?? "-")</td>
+                                <td class="text-end">
+                                    <a href="@Url.Action("Details", "Sessions", new { token, id = session.Id })">@Localizer["Action_Details"]</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}
+
+<div class="card-softres p-3">
+    <h3 class="h6 text-secondary">@Localizer["Dashboard_ShareLink"]</h3>
+    <code class="user-select-all">@($"{Context.Request.Scheme}://{Context.Request.Host}/r/{token}")</code>
+</div>

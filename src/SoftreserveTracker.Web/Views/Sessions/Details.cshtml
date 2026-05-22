@@ -1,0 +1,68 @@
+@model List<SoftreserveTracker.Web.Models.ViewModels.ReservationRowViewModel>
+@{
+    var session = ViewBag.Session as SoftreserveTracker.Web.Models.Entities.RaidSession;
+    ViewData["Title"] = Localizer["Session_Title"];
+    var token = ViewBag.Token;
+}
+
+<div class="page-header">
+    <h1 class="h2">@Localizer["Session_Title"] @session!.SessionDate.ToString("yyyy-MM-dd")</h1>
+    <p class="text-secondary mb-0">
+        <partial name="_RaidTypeBadge" model="session.RaidType.ToString()" />
+        @if (!string.IsNullOrEmpty(session.SoftresId))
+        {
+            <span class="ms-2">@Localizer["Col_SoftresId"]: @session.SoftresId</span>
+        }
+    </p>
+</div>
+
+<div class="table-softres-wrap table-softres-scroll">
+    <table class="table table-softres table-striped w-100" id="resultsTable">
+        <thead>
+            <tr>
+                <th class="col-compact">@Localizer["Col_Player"]</th>
+                <th class="col-item">@Localizer["Col_Item"]</th>
+                <th class="col-compact">@Localizer["Col_ReservedAt"]</th>
+                <th class="col-compact">@Localizer["Col_PlusOneDelta"]</th>
+                <th class="col-compact">@Localizer["Col_CurrentPlusOne"]</th>
+                <th class="col-compact">@Localizer["Col_Received"]</th>
+                <th class="col-compact">@Localizer["Col_Dropped"]</th>
+                <th>@Localizer["Col_Reason"]</th>
+                <th class="col-compact">@Localizer["Col_AwardedTo"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model)
+            {
+                <tr>
+                    <td class="col-compact"><partial name="_PlayerDisplay" model="row.Player" /></td>
+                    <td class="col-item"><partial name="_ItemLink" model="row.ItemId" /></td>
+                    <td class="col-compact">@(row.ReservedAt?.ToString("g") ?? "-")</td>
+                    <td class="col-compact"><span class="badge bg-warning text-dark plus-one-badge">+@row.PlusOneDelta</span></td>
+                    <td class="col-compact"><span class="badge bg-info text-dark plus-one-badge">@row.CurrentPlusOne</span></td>
+                    <td class="col-compact">@(row.PlayerReceived ? Localizer["Yes"].Value : Localizer["No"].Value)</td>
+                    <td class="col-compact">@(row.ItemDropped ? Localizer["Yes"].Value : Localizer["No"].Value)</td>
+                    <td><partial name="_PlusOneReason" model="row.Reason" /></td>
+                    <td class="col-compact">
+                        @if (row.AwardedTo == null)
+                        {
+                            @:- 
+                        }
+                        else if (row.AwardedTo.Name == "|de|")
+                        {
+                            @:|de|
+                        }
+                        else
+                        {
+                            <partial name="_PlayerDisplay" model="row.AwardedTo" />
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>$(function () { initSoftresDataTable('#resultsTable', { order: [[0, 'asc']] }); });</script>
+}

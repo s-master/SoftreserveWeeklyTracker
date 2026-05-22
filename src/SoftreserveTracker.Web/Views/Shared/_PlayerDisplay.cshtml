@@ -1,0 +1,62 @@
+@model SoftreserveTracker.Web.Models.ViewModels.PlayerDisplayViewModel
+@using Microsoft.AspNetCore.Localization
+@using SoftreserveTracker.Web.Services.Players
+@{
+    var requestCulture = ViewContext.HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture;
+    var culture = requestCulture?.UICulture?.TwoLetterISOLanguageName ?? "de";
+    var isGerman = culture == "de";
+    var wowheadHost = isGerman ? "de.wowhead.com" : "www.wowhead.com";
+    var wowheadDomain = isGerman ? "de" : "www";
+    var token = ViewBag.Token;
+    var classMeta = WowClassCatalog.Resolve(Model.PlayerClass);
+    var classLabel = WowClassCatalog.DisplayClassName(Model.PlayerClass);
+    var linkUrl = Model.LinkUrl;
+    if (linkUrl == null && Model.LinkName && Model.PlayerId.HasValue && token != null)
+    {
+        linkUrl = Url.Action("Player", "Overview", new { token, playerId = Model.PlayerId });
+    }
+    var showName = !Model.HideName;
+}
+<span class="player-display">
+    @if (classMeta != null)
+    {
+        if (Model.LinkClassIcon)
+        {
+            <a href="https://@wowheadHost/tbc/class=@classMeta.Slug"
+               data-wowhead="class=@classMeta.Id&domain=@wowheadDomain"
+               class="class-icon-link"
+               title="@classLabel">
+                <img src="@WowClassCatalog.IconUrl(classMeta.Slug)"
+                     alt="@classLabel"
+                     width="18"
+                     height="18"
+                     loading="lazy" />
+            </a>
+        }
+        else
+        {
+            <img src="@WowClassCatalog.IconUrl(classMeta.Slug)"
+                 class="class-icon-img"
+                 alt="@classLabel"
+                 title="@classLabel"
+                 width="18"
+                 height="18"
+                 loading="lazy" />
+        }
+    }
+    @if (showName)
+    {
+        if (linkUrl != null && Model.LinkName)
+        {
+            <a href="@linkUrl" class="player-group-name">@Model.Name</a>
+        }
+        else
+        {
+            <span class="player-group-name">@Model.Name</span>
+        }
+    }
+    else if (!string.IsNullOrWhiteSpace(Model.Name))
+    {
+        <span class="visually-hidden">@Model.Name</span>
+    }
+</span>

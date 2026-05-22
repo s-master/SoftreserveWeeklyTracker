@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Nav_Dashboard" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Nav_Upload" xml:space="preserve"><value>Upload</value></data>
+  <data name="Nav_Players" xml:space="preserve"><value>Players</value></data>
+  <data name="Nav_Items" xml:space="preserve"><value>Items</value></data>
+  <data name="Nav_Archive" xml:space="preserve"><value>Archive</value></data>
+  <data name="Nav_Debug" xml:space="preserve"><value>Debug</value></data>
+  <data name="Nav_Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Home_Title" xml:space="preserve"><value>Softreserve Tracker</value></data>
+  <data name="Home_Subtitle" xml:space="preserve"><value>Cross-week +1 tracking for soft reserves (TBC Anniversary)</value></data>
+  <data name="Home_CreateRoster" xml:space="preserve"><value>Create roster</value></data>
+  <data name="Home_RosterName" xml:space="preserve"><value>Roster name</value></data>
+  <data name="Home_CreateButton" xml:space="preserve"><value>Create &amp; get link</value></data>
+  <data name="Validation_Required" xml:space="preserve"><value>The {0} field is required.</value></data>
+  <data name="Validation_RosterNameRequired" xml:space="preserve"><value>Please enter a roster name.</value></data>
+  <data name="Validation_FilesRequired" xml:space="preserve"><value>Select at least one file.</value></data>
+  <data name="Dashboard_Title" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Dashboard_Subtitle" xml:space="preserve"><value>Raid weeks and sessions</value></data>
+  <data name="Dashboard_NoData" xml:space="preserve"><value>No raid data imported yet.</value></data>
+  <data name="Dashboard_RaidWeek" xml:space="preserve"><value>Raid ID</value></data>
+  <data name="Dashboard_ViewWeek" xml:space="preserve"><value>View week</value></data>
+  <data name="Dashboard_ShareLink" xml:space="preserve"><value>Secret roster link (only people with the link have access)</value></data>
+  <data name="Upload_Title" xml:space="preserve"><value>Import raid</value></data>
+  <data name="Upload_Subtitle" xml:space="preserve"><value>Upload all export files at once — Softres CSV and Gargul JSON are detected automatically and paired by date.</value></data>
+  <data name="Upload_Files" xml:space="preserve"><value>Export files</value></data>
+  <data name="Upload_FilesHint" xml:space="preserve"><value>Multiple files allowed (.csv, .txt, .json). One Softres CSV and one Gargul export per raid night.</value></data>
+  <data name="Upload_SoftresCsv" xml:space="preserve"><value>Softres.it export (CSV)</value></data>
+  <data name="Upload_GargulJson" xml:space="preserve"><value>Gargul export (JSON)</value></data>
+  <data name="Upload_Submit" xml:space="preserve"><value>Import</value></data>
+  <data name="Upload_SuccessSingle" xml:space="preserve"><value>Import successful. Created {0} session(s).</value></data>
+  <data name="Upload_SuccessBulk" xml:space="preserve"><value>Bulk import successful. {0} raid night(s), {1} session(s) created.</value></data>
+  <data name="RaidType_Ssc" xml:space="preserve"><value>SSC</value></data>
+  <data name="RaidType_Tk" xml:space="preserve"><value>TK</value></data>
+  <data name="Col_SoftresId" xml:space="preserve"><value>Softres ID</value></data>
+  <data name="Error_Title" xml:space="preserve"><value>Error</value></data>
+  <data name="Error_Message" xml:space="preserve"><value>An error occurred while processing your request.</value></data>
+  <data name="Error_RequestId" xml:space="preserve"><value>Request ID</value></data>
+  <data name="Error_DevelopmentHint" xml:space="preserve"><value>Development mode shows more detailed error information.</value></data>
+  <data name="Debug_ImportsCleared" xml:space="preserve"><value>Import data cleared.</value></data>
+  <data name="Debug_RosterDeleted" xml:space="preserve"><value>Roster deleted.</value></data>
+  <data name="Session_Title" xml:space="preserve"><value>Session</value></data>
+  <data name="Overview_Players_Title" xml:space="preserve"><value>Cumulative player overview (+1)</value></data>
+  <data name="Overview_Items_Title" xml:space="preserve"><value>Item overview (+1)</value></data>
+  <data name="Archive_Title" xml:space="preserve"><value>File archive</value></data>
+  <data name="Col_Player" xml:space="preserve"><value>Player</value></data>
+  <data name="Col_Item" xml:space="preserve"><value>Item</value></data>
+  <data name="Col_ReservedAt" xml:space="preserve"><value>Reserved at</value></data>
+  <data name="Col_PlusOneDelta" xml:space="preserve"><value>+1 delta</value></data>
+  <data name="Col_CurrentPlusOne" xml:space="preserve"><value>Current +1</value></data>
+  <data name="Col_Received" xml:space="preserve"><value>Received</value></data>
+  <data name="Col_Dropped" xml:space="preserve"><value>Dropped</value></data>
+  <data name="Col_Reason" xml:space="preserve"><value>Reason</value></data>
+  <data name="Col_AwardedTo" xml:space="preserve"><value>Awarded to</value></data>
+  <data name="Col_Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Col_Raid" xml:space="preserve"><value>Raid</value></data>
+  <data name="Col_File" xml:space="preserve"><value>File</value></data>
+  <data name="Col_Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Action_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Action_Download" xml:space="preserve"><value>Download</value></data>
+  <data name="Yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="No" xml:space="preserve"><value>No</value></data>
+  <data name="Reason_DidNotDrop" xml:space="preserve"><value>Did not drop</value></data>
+  <data name="Reason_LostToOtherPlayer" xml:space="preserve"><value>Awarded to other player</value></data>
+  <data name="Reason_ReceivedItem" xml:space="preserve"><value>Received item</value></data>
+  <data name="Player_ActivePlusOnes" xml:space="preserve"><value>Current +1</value></data>
+  <data name="Player_ReservationHistory" xml:space="preserve"><value>Softres &amp; +1 history</value></data>
+  <data name="Player_NoReservations" xml:space="preserve"><value>No soft reserve entries.</value></data>
+  <data name="Player_LootWon" xml:space="preserve"><value>Loot won</value></data>
+  <data name="Player_NoLootWon" xml:space="preserve"><value>No loot received yet.</value></data>
+  <data name="Player_Rolls" xml:space="preserve"><value>Rolls (Gargul)</value></data>
+  <data name="Player_NoRolls" xml:space="preserve"><value>No rolls stored (available after next import).</value></data>
+  <data name="Player_Won" xml:space="preserve"><value>Won</value></data>
+  <data name="Player_Lost" xml:space="preserve"><value>Lost</value></data>
+  <data name="Player_AllPlayers" xml:space="preserve"><value>All players</value></data>
+  <data name="Col_AwardedAt" xml:space="preserve"><value>Awarded at</value></data>
+  <data name="Col_Roll" xml:space="preserve"><value>Roll</value></data>
+  <data name="Col_Classification" xml:space="preserve"><value>Type</value></data>
+  <data name="Col_Priority" xml:space="preserve"><value>Priority</value></data>
+  <data name="Col_Result" xml:space="preserve"><value>Result</value></data>
+  <data name="Debug_Title" xml:space="preserve"><value>Debug</value></data>
+  <data name="Debug_Subtitle" xml:space="preserve"><value>Clear import data and manage rosters (testing only)</value></data>
+  <data name="Debug_Warning" xml:space="preserve"><value>Destructive actions — development and testing only.</value></data>
+  <data name="Debug_NoRosters" xml:space="preserve"><value>No rosters found.</value></data>
+  <data name="Debug_Created" xml:space="preserve"><value>Created</value></data>
+  <data name="Debug_Weeks" xml:space="preserve"><value>Weeks</value></data>
+  <data name="Debug_Sessions" xml:space="preserve"><value>Sessions</value></data>
+  <data name="Debug_Players" xml:space="preserve"><value>Players</value></data>
+  <data name="Debug_Link" xml:space="preserve"><value>Link</value></data>
+  <data name="Debug_Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Debug_ClearImports" xml:space="preserve"><value>Clear imports</value></data>
+  <data name="Debug_DeleteRoster" xml:space="preserve"><value>Delete roster</value></data>
+  <data name="Debug_ConfirmClear" xml:space="preserve"><value>Delete all import data for this roster?</value></data>
+  <data name="Debug_ConfirmDelete" xml:space="preserve"><value>Delete this roster completely?</value></data>
+</root>

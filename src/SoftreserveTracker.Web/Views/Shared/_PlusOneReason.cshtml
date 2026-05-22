@@ -1,0 +1,11 @@
+@model string
+@{
+    var label = Model switch
+    {
+        "DidNotDrop" => Localizer["Reason_DidNotDrop"].Value,
+        "LostToOtherPlayer" => Localizer["Reason_LostToOtherPlayer"].Value,
+        "ReceivedItem" => Localizer["Reason_ReceivedItem"].Value,
+        _ => Model
+    };
+}
+@label
