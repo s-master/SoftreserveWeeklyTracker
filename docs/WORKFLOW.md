@@ -185,3 +185,4 @@ There is **no delete/re-import UI** in production yet; fixing bad data requires 
 | Item links | `de.wowhead.com/tbc/item=…` or `www.wowhead.com/tbc/item=…`, **new tab** |
 | Item search names | Stored in `KnownItems` (CSV `Item` column + Gargul `itemLink` on import); backfilled from archive on first item-overview load if missing |
 | Softres.it links | Dashboard/session softres ID → `https://softres.it/raid/{id}` (new tab) |
+| Link previews (Discord etc.) | Open Graph meta tags in `_OpenGraph.cshtml`; roster pages set dynamic title/description and `~/img/logo.png` as preview image |

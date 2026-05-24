@@ -96,4 +96,14 @@
   <data name="Debug_DeleteRoster" xml:space="preserve"><value>Roster löschen</value></data>
   <data name="Debug_ConfirmClear" xml:space="preserve"><value>Alle Import-Daten für dieses Roster löschen?</value></data>
   <data name="Debug_ConfirmDelete" xml:space="preserve"><value>Dieses Roster komplett löschen?</value></data>
+  <data name="Og_SiteName" xml:space="preserve"><value>Nüsslisalat Softreserve Tracker</value></data>
+  <data name="Og_DefaultDescription" xml:space="preserve"><value>Wochenübergreifendes +1-Tracking für Softreserves in SSC und Tempest Keep. TBC Anniversary · Thunderstrike Horde.</value></data>
+  <data name="Og_Dashboard_Title" xml:space="preserve"><value>{0} – Softreserve Dashboard</value></data>
+  <data name="Og_Dashboard_Description" xml:space="preserve"><value>Raid-Wochen und Sessions für {0}. {1} Raid-IDs, {2} Sessions importiert. TBC Anniversary Softreserve +1-Tracker.</value></data>
+  <data name="Og_Players_Title" xml:space="preserve"><value>Spielerübersicht (+1) – {0}</value></data>
+  <data name="Og_Players_Description" xml:space="preserve"><value>{0} Spieler mit aktiven +1-Reservierungen ({1} Einträge, Summe +{2}). Kumulative Softreserve-Standings für SSC &amp; TK.</value></data>
+  <data name="Og_Items_Title" xml:space="preserve"><value>Item-Übersicht (+1) – {0}</value></data>
+  <data name="Og_Items_Description" xml:space="preserve"><value>{0} Items mit offenen +1-Reservierungen bei {1} Spielern ({2} Einträge). Softreserve-Tracker für Nüsslisalat.</value></data>
+  <data name="Og_Player_Title" xml:space="preserve"><value>{0} – {1}</value></data>
+  <data name="Og_Player_Description" xml:space="preserve"><value>+1-Stand, Reservierungen und Loot für {0}: {1} aktive +1, {2} Items erhalten.</value></data>
 </root>

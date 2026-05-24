@@ -46,4 +46,14 @@ public class RosterControllerBase : Controller
 {
     protected Roster CurrentRoster => RosterAccessFilter.GetRoster(HttpContext);
     protected Guid AccessToken => CurrentRoster.AccessToken;
+
+    protected void SetOpenGraph(string title, string description, string? imagePath = null)
+    {
+        ViewData[OpenGraphKeys.Title] = title;
+        ViewData[OpenGraphKeys.Description] = description;
+        if (!string.IsNullOrWhiteSpace(imagePath))
+        {
+            ViewData[OpenGraphKeys.ImagePath] = imagePath;
+        }
+    }
 }

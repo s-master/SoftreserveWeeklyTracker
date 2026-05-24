@@ -1,14 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using SoftreserveTracker.Web.Data;
 using SoftreserveTracker.Web.Infrastructure;
 using SoftreserveTracker.Web.Models.ViewModels;
+using SoftreserveTracker.Web.Resources;
 
 namespace SoftreserveTracker.Web.Controllers;
 
 [RosterAccess]
 [Route("r/{token:guid}")]
-public class RosterController(AppDbContext db) : RosterControllerBase
+public class RosterController(AppDbContext db, IStringLocalizer<SharedResource> localizer) : RosterControllerBase
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -40,6 +42,13 @@ public class RosterController(AppDbContext db) : RosterControllerBase
 
         ViewBag.RosterName = CurrentRoster.Name;
         ViewBag.Token = AccessToken;
+
+        var weekCount = weeks.Count;
+        var sessionCount = weeks.Sum(w => w.Sessions.Count);
+        SetOpenGraph(
+            localizer["Og_Dashboard_Title", CurrentRoster.Name].Value,
+            localizer["Og_Dashboard_Description", CurrentRoster.Name, weekCount, sessionCount].Value);
+
         return View(model);
     }
 }

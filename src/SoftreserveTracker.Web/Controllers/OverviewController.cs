@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using SoftreserveTracker.Web.Data;
 using SoftreserveTracker.Web.Infrastructure;
 using SoftreserveTracker.Web.Models.ViewModels;
+using SoftreserveTracker.Web.Resources;
 using SoftreserveTracker.Web.Services.Items;
 using SoftreserveTracker.Web.Services.Players;
 
@@ -13,7 +15,8 @@ namespace SoftreserveTracker.Web.Controllers;
 public class OverviewController(
     AppDbContext db,
     IPlayerClassLookup playerClassLookup,
-    IKnownItemService knownItemService) : RosterControllerBase
+    IKnownItemService knownItemService,
+    IStringLocalizer<SharedResource> localizer) : RosterControllerBase
 {
     [HttpGet("players")]
     public async Task<IActionResult> Players(CancellationToken cancellationToken)
@@ -43,6 +46,13 @@ public class OverviewController(
             Spec = classLookup.GetValueOrDefault(p.Id)?.Spec
         }).ToList();
 
+        var playersWithPlusOne = rows.Select(r => r.Player.PlayerId).Distinct().Count();
+        var entryCount = rows.Count;
+        var totalPlusOne = rows.Sum(r => r.CurrentPlusOne);
+        SetOpenGraph(
+            localizer["Og_Players_Title", CurrentRoster.Name].Value,
+            localizer["Og_Players_Description", playersWithPlusOne, entryCount, totalPlusOne].Value);
+
         return View(rows);
     }
 
@@ -59,7 +69,11 @@ public class OverviewController(
         }
 
         ViewBag.Token = AccessToken;
-        return View(await BuildPlayerDetailAsync(player.Id, player.Name, cancellationToken));
+        var detail = await BuildPlayerDetailAsync(player.Id, player.Name, cancellationToken);
+        SetOpenGraph(
+            localizer["Og_Player_Title", player.Name, CurrentRoster.Name].Value,
+            localizer["Og_Player_Description", player.Name, detail.ActivePlusOnes.Count, detail.LootWon.Count].Value);
+        return View(detail);
     }
 
     [HttpGet("items")]
@@ -67,6 +81,14 @@ public class OverviewController(
     {
         var rows = await BuildItemOverviewAsync(cancellationToken);
         ViewBag.Token = AccessToken;
+
+        var itemCount = rows.Select(r => r.ItemId).Distinct().Count();
+        var entryCount = rows.Count;
+        var playerCount = rows.Select(r => r.Player.PlayerId).Distinct().Count();
+        SetOpenGraph(
+            localizer["Og_Items_Title", CurrentRoster.Name].Value,
+            localizer["Og_Items_Description", itemCount, playerCount, entryCount].Value);
+
         return View(rows);
     }
 
