@@ -242,8 +242,30 @@ footer {
 }
 
 .item-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     text-decoration: none;
     white-space: nowrap;
+    line-height: 1.2;
+}
+
+.item-link img {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.table-softres .item-search-text {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
 }
 
 .player-display {
@@ -346,11 +368,16 @@ footer {
 .table-softres th,
 .table-softres td {
     white-space: nowrap;
+    vertical-align: middle;
 }
 
 .table-softres th.col-item,
 .table-softres td.col-item {
     white-space: nowrap;
+}
+
+.table-softres td.col-item {
+    position: relative;
 }
 
 .table-softres td.col-item .item-link,
@@ -376,7 +403,8 @@ a.player-group-name:hover {
     color: var(--sr-link);
 }
 
-tr.player-group-start td {
+.table-softres tbody tr.player-group-start td,
+.table-softres tbody tr.item-group-start td {
     border-top: 2px solid var(--sr-border);
 }
 

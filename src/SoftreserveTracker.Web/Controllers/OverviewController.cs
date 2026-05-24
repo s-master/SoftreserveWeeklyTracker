@@ -3,13 +3,17 @@ using Microsoft.EntityFrameworkCore;
 using SoftreserveTracker.Web.Data;
 using SoftreserveTracker.Web.Infrastructure;
 using SoftreserveTracker.Web.Models.ViewModels;
+using SoftreserveTracker.Web.Services.Items;
 using SoftreserveTracker.Web.Services.Players;
 
 namespace SoftreserveTracker.Web.Controllers;
 
 [RosterAccess]
 [Route("r/{token:guid}/overview")]
-public class OverviewController(AppDbContext db, IPlayerClassLookup playerClassLookup) : RosterControllerBase
+public class OverviewController(
+    AppDbContext db,
+    IPlayerClassLookup playerClassLookup,
+    IKnownItemService knownItemService) : RosterControllerBase
 {
     [HttpGet("players")]
     public async Task<IActionResult> Players(CancellationToken cancellationToken)
@@ -157,9 +161,8 @@ public class OverviewController(AppDbContext db, IPlayerClassLookup playerClassL
                 .Select(r => new { r.RaidSessionId, r.ItemId, r.ReservedAt })
                 .ToListAsync(cancellationToken);
 
-        var softresLookup = softresRows.ToDictionary(
-            r => (r.RaidSessionId, r.ItemId),
-            r => (DateTime?)r.ReservedAt);
+        var softresLookup = SoftReserveLookups.ReservedAtBySessionItem(
+            softresRows.Select(r => (r.RaidSessionId, r.ItemId, r.ReservedAt)));
 
         var awardedToIds = results
             .Where(r => r.AwardedToPlayerId.HasValue)
@@ -290,12 +293,20 @@ public class OverviewController(AppDbContext db, IPlayerClassLookup playerClassL
 
         var lastLookup = lastReserved.ToDictionary(x => (x.PlayerId, x.ItemId), x => (DateTime?)x.LastAt);
 
+        var itemNames = await knownItemService.GetNamesByItemIdsAsync(itemIds, cancellationToken);
+        if (itemIds.Any(id => !itemNames.ContainsKey(id)))
+        {
+            await knownItemService.SyncFromRosterArchivesAsync(CurrentRoster.Id, cancellationToken);
+            itemNames = await knownItemService.GetNamesByItemIdsAsync(itemIds, cancellationToken);
+        }
+
         return balances
             .OrderBy(b => b.ItemId)
             .ThenByDescending(b => b.CurrentCount)
             .Select(entry => new ItemOverviewRowViewModel
             {
                 ItemId = entry.ItemId,
+                ItemName = itemNames.GetValueOrDefault(entry.ItemId),
                 Player = PlayerDisplayBuilder.Create(
                     entry.Player.Name,
                     entry.PlayerId,

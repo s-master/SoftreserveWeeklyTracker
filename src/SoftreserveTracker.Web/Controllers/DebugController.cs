@@ -24,7 +24,7 @@ public class DebugController(
     public async Task<IActionResult> ClearImports(Guid rosterId, CancellationToken cancellationToken)
     {
         await debugAdmin.ClearImportDataAsync(rosterId, cancellationToken);
-        TempData["Success"] = localizer["Debug_ImportsCleared"];
+        TempData["Success"] = localizer["Debug_ImportsCleared"].Value;
         return RedirectToAction(nameof(Index));
     }
 
@@ -33,7 +33,7 @@ public class DebugController(
     public async Task<IActionResult> DeleteRoster(Guid rosterId, CancellationToken cancellationToken)
     {
         await debugAdmin.DeleteRosterAsync(rosterId, cancellationToken);
-        TempData["Success"] = localizer["Debug_RosterDeleted"];
+        TempData["Success"] = localizer["Debug_RosterDeleted"].Value;
         return RedirectToAction(nameof(Index));
     }
 }

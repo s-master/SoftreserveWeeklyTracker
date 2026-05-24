@@ -23,11 +23,17 @@
             @foreach (var row in Model)
             {
                 <tr>
-                    <td class="col-item"><partial name="_ItemLink" model="row.ItemId" /></td>
+                    <td class="col-item"
+                        data-order="@row.ItemId"
+                        data-item-id="@row.ItemId"
+                        data-item-name="@row.ItemName">
+                        <partial name="_ItemLink" model="row.ItemId" />
+                        <span class="item-search-text" aria-hidden="true">@row.ItemId@(string.IsNullOrWhiteSpace(row.ItemName) ? "" : $" {row.ItemName}")</span>
+                    </td>
                     <td class="col-compact"><partial name="_PlayerDisplay" model="row.Player" /></td>
-                    <td class="col-compact"><span class="badge bg-info text-dark">@row.CurrentPlusOne</span></td>
+                    <td class="col-compact" data-order="@row.CurrentPlusOne"><span class="badge bg-info text-dark">@row.CurrentPlusOne</span></td>
                     <td class="col-compact">@(row.HasReceived ? Localizer["Yes"].Value : Localizer["No"].Value)</td>
-                    <td class="col-compact">@(row.LastReservedAt?.ToString("g") ?? "-")</td>
+                    <td class="col-compact" data-order="@(row.LastReservedAt?.Ticks ?? 0)">@(row.LastReservedAt?.ToString("g") ?? "-")</td>
                 </tr>
             }
         </tbody>
@@ -35,5 +41,103 @@
 </div>
 
 @section Scripts {
-    <script>$(function () { initSoftresDataTable('#itemTable', { order: [[0, 'asc'], [2, 'desc']] }); });</script>
+    <script>
+        function refreshItemTableSearch(tableApi) {
+            var changed = false;
+            tableApi.rows().every(function () {
+                var cell = this.node().querySelector('td[data-item-id]');
+                if (!cell) {
+                    return;
+                }
+
+                var span = cell.querySelector('.item-search-text');
+                if (!span) {
+                    return;
+                }
+
+                var id = cell.getAttribute('data-item-id');
+                var storedName = (cell.getAttribute('data-item-name') || '').trim();
+                var link = cell.querySelector('.item-link');
+                var parts = [id];
+                if (storedName) {
+                    parts.push(storedName);
+                }
+
+                if (link) {
+                    var label = link.textContent.trim();
+                    if (label && label !== id && !/^\d+$/.test(label) && parts.indexOf(label) === -1) {
+                        parts.push(label);
+                    }
+                }
+
+                var next = parts.join(' ');
+                if (span.textContent !== next) {
+                    span.textContent = next;
+                    changed = true;
+                }
+            });
+
+            if (changed) {
+                tableApi.rows().invalidate('dom');
+            }
+        }
+
+        function collapseDuplicateItemCells(tableApi) {
+            var lastItemId = null;
+            var isFirstRow = true;
+            tableApi.rows({ page: 'current', order: 'applied' }).every(function () {
+                var row = this.node();
+                var cell = row.querySelector('td[data-item-id]');
+                if (!cell) {
+                    return;
+                }
+
+                if (!cell.dataset.itemHtml) {
+                    cell.dataset.itemHtml = cell.innerHTML;
+                } else {
+                    cell.innerHTML = cell.dataset.itemHtml;
+                }
+
+                var itemId = cell.getAttribute('data-item-id');
+                var itemLink = cell.querySelector('.item-link');
+                if (itemId === lastItemId) {
+                    cell.classList.add('item-cell-repeat');
+                    itemLink?.classList.add('visually-hidden');
+                    row.classList.remove('item-group-start');
+                } else {
+                    lastItemId = itemId;
+                    cell.classList.remove('item-cell-repeat');
+                    itemLink?.classList.remove('visually-hidden');
+                    row.classList.toggle('item-group-start', !isFirstRow);
+                }
+
+                isFirstRow = false;
+            });
+        }
+
+        $(function () {
+            initSoftresDataTable('#itemTable', {
+                order: [[0, 'asc'], [2, 'desc']],
+                columnDefs: [
+                    { targets: '.col-item', className: 'col-item' },
+                    { targets: '.col-compact', className: 'col-compact' },
+                    { targets: [2, 3, 4], searchable: false }
+                ],
+                initComplete: function () {
+                    var api = this.api();
+                    window.setTimeout(function () { refreshItemTableSearch(api); }, 400);
+                    window.setTimeout(function () { refreshItemTableSearch(api); }, 1200);
+                },
+                drawCallback: function () {
+                    var api = this.api();
+                    collapseDuplicateItemCells(api);
+                    if (window.$WowheadPower && typeof $WowheadPower.refreshLinks === 'function') {
+                        $WowheadPower.refreshLinks(true);
+                    }
+                    window.setTimeout(function () { refreshItemTableSearch(api); }, 300);
+                    window.setTimeout(function () { refreshItemTableSearch(api); }, 1500);
+                }
+            });
+        });
+    </script>
 }

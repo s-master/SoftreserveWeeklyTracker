@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SoftreserveTracker.Web.Data;
 using SoftreserveTracker.Web.Models.Entities;
 using SoftreserveTracker.Web.Models.Enums;
+using SoftreserveTracker.Web.Services.Items;
 using SoftreserveTracker.Web.Services.Parsing;
 using SoftreserveTracker.Web.Services.Players;
 using SoftreserveTracker.Web.Services.PlusOne;
@@ -17,7 +18,8 @@ public sealed class RaidImportService(
     IGargulJsonParser gargulParser,
     IFileArchiveService fileArchive,
     IPlusOneCalculator plusOneCalculator,
-    IUploadFileClassifier uploadFileClassifier) : IRaidImportService
+    IUploadFileClassifier uploadFileClassifier,
+    IKnownItemService knownItemService) : IRaidImportService
 {
     public async Task<ImportResult> ImportAsync(
         Guid rosterId,
@@ -119,6 +121,16 @@ public sealed class RaidImportService(
         var softres = softresParser.Parse(csvContent);
         var gargul = gargulParser.Parse(jsonContent);
 
+        await knownItemService.UpsertAsync(
+            softres.Rows
+                .Where(r => !string.IsNullOrWhiteSpace(r.ItemName))
+                .Select(r => (r.ItemId, r.ItemName))
+                .Concat(gargul.GroupsBySoftresId.Values
+                    .SelectMany(entries => entries)
+                    .Select(e => (e.ItemId, WoWItemLinkParser.ExtractItemName(e.ItemLink) ?? string.Empty))
+                    .Where(e => !string.IsNullOrWhiteSpace(e.Item2))),
+            cancellationToken);
+
         if (softres.SessionDate != gargul.SessionDate)
         {
             warnings.Add($"Session dates differ: Softres={softres.SessionDate:yyyy-MM-dd}, Gargul={gargul.SessionDate:yyyy-MM-dd}. Using Softres date.");
@@ -134,9 +146,26 @@ public sealed class RaidImportService(
 
         foreach (var (groupKey, lootEntries) in gargul.GroupsBySoftresId)
         {
+            var groupDate = lootEntries.Min(e => e.AwardedAt).Date;
+            if (groupDate != sessionDate)
+            {
+                var label = string.IsNullOrWhiteSpace(groupKey) ? "(none)" : $"'{groupKey}'";
+                warnings.Add(
+                    $"Gargul group {label} skipped: loot date {groupDate:yyyy-MM-dd} differs from Softres session {sessionDate:yyyy-MM-dd}.");
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(groupKey))
+            {
+                var raidTypeHint = ItemRaidCatalog.DetectFromItemIds(lootEntries.Select(l => l.ItemId));
+                warnings.Add(
+                    $"Gargul group without softresID skipped: {lootEntries.Count} loot entries on {groupDate:yyyy-MM-dd} ({raidTypeHint}).");
+                continue;
+            }
+
             var raidType = ItemRaidCatalog.DetectFromItemIds(lootEntries.Select(l => l.ItemId));
             var attachSoftres = softresTargetKey != null && groupKey == softresTargetKey;
-            var sessionSoftresId = string.IsNullOrWhiteSpace(groupKey) ? null : groupKey;
+            var sessionSoftresId = groupKey;
 
             var sessionExists = await db.RaidSessions
                 .AsNoTracking()
@@ -154,22 +183,6 @@ public sealed class RaidImportService(
                 continue;
             }
 
-            if (!attachSoftres)
-            {
-                if (string.IsNullOrWhiteSpace(groupKey))
-                {
-                    warnings.Add($"Gargul group without softresID ({raidType}): loot only, no softres CSV.");
-                }
-                else if (raidType != softres.RaidType)
-                {
-                    warnings.Add($"Gargul group '{groupKey}' detected as {raidType}; softres CSV is {softres.RaidType}. Loot imported without softres for this group.");
-                }
-                else if (softresTargetKey != null)
-                {
-                    warnings.Add($"Gargul group '{groupKey}' ({raidType}): loot only; softres CSV attached to '{softresTargetKey}'.");
-                }
-            }
-
             var session = new RaidSession
             {
                 RaidWeekId = raidWeek.Id,
@@ -184,23 +197,31 @@ public sealed class RaidImportService(
 
             if (attachSoftres)
             {
-                foreach (var row in softres.Rows)
-                {
-                    var player = await GetOrCreatePlayerAsync(rosterId, row.PlayerName, cancellationToken);
-                    db.SoftReserves.Add(new SoftReserve
-                    {
-                        RaidSessionId = session.Id,
-                        PlayerId = player.Id,
-                        ItemId = row.ItemId,
-                        BossSource = row.BossSource,
-                        PlayerClass = row.PlayerClass,
-                        Spec = row.Spec,
-                        Note = row.Note,
-                        ReservedAt = row.ReservedAt
-                    });
-                }
-
+                await AddSoftresRowsAsync(session.Id, softres.Rows, rosterId, cancellationToken);
                 await fileArchive.SaveAsync(session.Id, softresCsvFileName, csvContent, UploadFileType.SoftresCsv, cancellationToken);
+            }
+            else
+            {
+                var carried = await TryAttachCarriedSoftresAsync(
+                    rosterId,
+                    session.Id,
+                    groupKey,
+                    sessionDate,
+                    raidType,
+                    warnings,
+                    cancellationToken);
+
+                if (!carried)
+                {
+                    if (raidType != softres.RaidType)
+                    {
+                        warnings.Add($"Gargul group '{groupKey}' detected as {raidType}; softres CSV is {softres.RaidType}. Loot imported without softres for this group.");
+                    }
+                    else if (softresTargetKey != null)
+                    {
+                        warnings.Add($"Gargul group '{groupKey}' ({raidType}): loot only; softres CSV attached to '{softresTargetKey}'.");
+                    }
+                }
             }
 
             foreach (var entry in lootEntries)
@@ -330,11 +351,13 @@ public sealed class RaidImportService(
         {
             RaidSessionId = s.Id,
             SessionDate = s.SessionDate,
-            Reservations = s.SoftReserves.Select(r => new PlusOneReservationInput
-            {
-                PlayerId = r.PlayerId,
-                ItemId = r.ItemId
-            }).ToList(),
+            Reservations = s.SoftReserves
+                .GroupBy(r => (r.PlayerId, r.ItemId))
+                .Select(g => new PlusOneReservationInput
+                {
+                    PlayerId = g.Key.PlayerId,
+                    ItemId = g.Key.ItemId
+                }).ToList(),
             Loot = s.LootAwards.Select(l => new PlusOneLootInput
             {
                 ItemId = l.ItemId,
@@ -380,6 +403,121 @@ public sealed class RaidImportService(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task AddSoftresRowsAsync(
+        int sessionId,
+        IEnumerable<SoftresRow> rows,
+        Guid rosterId,
+        CancellationToken cancellationToken)
+    {
+        var addedSoftresKeys = new HashSet<(int PlayerId, int ItemId)>();
+        foreach (var row in rows)
+        {
+            var player = await GetOrCreatePlayerAsync(rosterId, row.PlayerName, cancellationToken);
+            if (!addedSoftresKeys.Add((player.Id, row.ItemId)))
+            {
+                continue;
+            }
+
+            db.SoftReserves.Add(new SoftReserve
+            {
+                RaidSessionId = sessionId,
+                PlayerId = player.Id,
+                ItemId = row.ItemId,
+                BossSource = row.BossSource,
+                PlayerClass = row.PlayerClass,
+                Spec = row.Spec,
+                Note = row.Note,
+                ReservedAt = row.ReservedAt
+            });
+        }
+    }
+
+    private async Task<bool> TryAttachCarriedSoftresAsync(
+        Guid rosterId,
+        int sessionId,
+        string softresId,
+        DateTime sessionDate,
+        RaidType raidType,
+        List<string> warnings,
+        CancellationToken cancellationToken)
+    {
+        var sourceSession = await db.RaidSessions
+            .AsNoTracking()
+            .Include(s => s.SoftReserves)
+            .Where(s => s.RaidWeek.RosterId == rosterId
+                        && s.SoftresId == softresId
+                        && s.SessionDate < sessionDate
+                        && s.SoftReserves.Any())
+            .OrderBy(s => s.SessionDate)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (sourceSession == null)
+        {
+            return false;
+        }
+
+        if (sourceSession.RaidType != raidType)
+        {
+            warnings.Add(
+                $"Gargul group '{softresId}' ({raidType}): no matching earlier softres session (prior session is {sourceSession.RaidType}).");
+            return false;
+        }
+
+        var receivedPairs = await db.LootAwards
+            .AsNoTracking()
+            .Where(l => l.RaidSession.RaidWeek.RosterId == rosterId
+                        && l.WinnerPlayerId != null
+                        && !l.IsDisenchanted
+                        && l.RaidSession.SessionDate < sessionDate)
+            .Select(l => new { l.WinnerPlayerId, l.ItemId })
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var receivedSet = receivedPairs
+            .Select(p => (p.WinnerPlayerId!.Value, p.ItemId))
+            .ToHashSet();
+
+        var addedSoftresKeys = new HashSet<(int PlayerId, int ItemId)>();
+        var added = 0;
+        var skippedReceived = 0;
+
+        foreach (var row in sourceSession.SoftReserves)
+        {
+            if (receivedSet.Contains((row.PlayerId, row.ItemId)))
+            {
+                skippedReceived++;
+                continue;
+            }
+
+            if (!addedSoftresKeys.Add((row.PlayerId, row.ItemId)))
+            {
+                continue;
+            }
+
+            db.SoftReserves.Add(new SoftReserve
+            {
+                RaidSessionId = sessionId,
+                PlayerId = row.PlayerId,
+                ItemId = row.ItemId,
+                BossSource = row.BossSource,
+                PlayerClass = row.PlayerClass,
+                Spec = row.Spec,
+                Note = row.Note,
+                ReservedAt = row.ReservedAt
+            });
+            added++;
+        }
+
+        if (added == 0)
+        {
+            return false;
+        }
+
+        warnings.Add(
+            $"Gargul group '{softresId}': continued softres from {sourceSession.SessionDate:yyyy-MM-dd} ({added} active, {skippedReceived} already received skipped).");
+        return true;
     }
 
     private static string? ResolveSoftresTargetGroup(

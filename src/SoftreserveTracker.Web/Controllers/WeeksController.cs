@@ -34,15 +34,8 @@ public class WeeksController(AppDbContext db, IPlayerClassLookup playerClassLook
             .Where(r => sessionIds.Contains(r.RaidSessionId))
             .ToListAsync(cancellationToken);
 
-        var reservedAtLookup = softReserves.ToDictionary(
-            r => (r.RaidSessionId, r.PlayerId, r.ItemId),
-            r => (DateTime?)r.ReservedAt);
-
-        var softresClassByKey = softReserves
-            .Where(r => !string.IsNullOrWhiteSpace(r.PlayerClass))
-            .ToDictionary(
-                r => (r.RaidSessionId, r.PlayerId, r.ItemId),
-                r => new PlayerClassInfo(r.PlayerClass!, r.Spec));
+        var reservedAtLookup = SoftReserveLookups.ReservedAtBySessionPlayerItem(softReserves);
+        var softresClassByKey = SoftReserveLookups.ClassBySessionPlayerItem(softReserves);
 
         var balances = await db.PlusOneBalances
             .Where(b => b.Player.RosterId == CurrentRoster.Id)

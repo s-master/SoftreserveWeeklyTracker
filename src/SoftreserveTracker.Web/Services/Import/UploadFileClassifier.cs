@@ -52,13 +52,24 @@ public sealed class UploadFileClassifier(
         {
             var csvDate = GetSessionDate(UploadFileKind.SoftresCsv, csv.Content);
             var candidates = jsonFiles
-                .Where(j => !usedJson.Contains(j) && GetSessionDate(UploadFileKind.GargulJson, j.Content) == csvDate)
+                .Where(j => !usedJson.Contains(j) && gargulParser.GetSessionDates(j.Content).Contains(csvDate))
                 .ToList();
 
             if (candidates.Count == 0)
             {
+                var gargulDates = jsonFiles
+                    .SelectMany(j => gargulParser.GetSessionDates(j.Content))
+                    .Distinct()
+                    .OrderBy(d => d)
+                    .Select(d => d.ToString("yyyy-MM-dd"))
+                    .ToList();
+
+                var hint = gargulDates.Count > 0
+                    ? $" Uploaded Gargul export(s) contain loot from: {string.Join(", ", gargulDates)}."
+                    : string.Empty;
+
                 throw new InvalidOperationException(
-                    $"No Gargul export found for Softres file '{csv.FileName}' (session date {csvDate:yyyy-MM-dd}).");
+                    $"No Gargul export found for Softres file '{csv.FileName}' (session date {csvDate:yyyy-MM-dd}).{hint}");
             }
 
             var match = candidates[0];

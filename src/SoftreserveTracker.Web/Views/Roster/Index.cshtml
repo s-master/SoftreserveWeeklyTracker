@@ -50,7 +50,18 @@ else
                             <tr>
                                 <td>@session.SessionDate.ToString("yyyy-MM-dd")</td>
                                 <td><partial name="_RaidTypeBadge" model="session.RaidType" /></td>
-                                <td class="text-secondary">@(session.SoftresId ?? "-")</td>
+                                <td class="text-secondary">
+                                    @if (string.IsNullOrEmpty(session.SoftresId))
+                                    {
+                                        @:-
+                                    }
+                                    else
+                                    {
+                                        <a href="https://softres.it/raid/@session.SoftresId"
+                                           target="_blank"
+                                           rel="noopener noreferrer">@session.SoftresId</a>
+                                    }
+                                </td>
                                 <td class="text-end">
                                     <a href="@Url.Action("Details", "Sessions", new { token, id = session.Id })">@Localizer["Action_Details"]</a>
                                 </td>

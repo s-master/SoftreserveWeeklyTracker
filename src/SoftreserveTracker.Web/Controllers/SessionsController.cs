@@ -31,14 +31,8 @@ public class SessionsController(AppDbContext db, IPlayerClassLookup playerClassL
             .Where(b => b.Player.RosterId == CurrentRoster.Id)
             .ToDictionaryAsync(b => (b.PlayerId, b.ItemId), b => b.CurrentCount, cancellationToken);
 
-        var reservedAtLookup = session.SoftReserves
-            .ToDictionary(r => (r.PlayerId, r.ItemId), r => (DateTime?)r.ReservedAt);
-
-        var softresClassByKey = session.SoftReserves
-            .Where(r => !string.IsNullOrWhiteSpace(r.PlayerClass))
-            .ToDictionary(
-                r => (r.PlayerId, r.ItemId),
-                r => new PlayerClassInfo(r.PlayerClass!, r.Spec));
+        var reservedAtLookup = SoftReserveLookups.ReservedAtByPlayerItem(session.SoftReserves);
+        var softresClassByKey = SoftReserveLookups.ClassByPlayerItem(session.SoftReserves);
 
         var playerIds = session.ReservationResults
             .SelectMany(r => new int?[] { r.PlayerId, r.AwardedToPlayerId })

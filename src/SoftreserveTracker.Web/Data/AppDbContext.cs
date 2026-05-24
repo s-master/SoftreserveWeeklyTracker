@@ -15,6 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<PlusOneBalance> PlusOneBalances => Set<PlusOneBalance>();
     public DbSet<SessionReservationResult> SessionReservationResults => Set<SessionReservationResult>();
     public DbSet<UploadedFile> UploadedFiles => Set<UploadedFile>();
+    public DbSet<KnownItem> KnownItems => Set<KnownItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -95,6 +96,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.HasKey(x => x.Id);
             e.HasOne(x => x.RaidSession).WithMany(x => x.UploadedFiles).HasForeignKey(x => x.RaidSessionId);
+        });
+
+        modelBuilder.Entity<KnownItem>(e =>
+        {
+            e.HasKey(x => x.ItemId);
+            e.Property(x => x.ItemId).ValueGeneratedNever();
+            e.Property(x => x.Name).HasMaxLength(200);
         });
     }
 }

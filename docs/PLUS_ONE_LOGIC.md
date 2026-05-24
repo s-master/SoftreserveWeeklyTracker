@@ -72,7 +72,7 @@ After all sessions, only balances **> 0** are written to `PlusOneBalances`.
 | View | Filter |
 |------|--------|
 | Player overview | `PlusOneBalance.CurrentCount > 0` only |
-| Item overview | All `(player, item)` balance rows; adds `HasReceived` from historical `LootAward` data |
+| Item overview | All `(player, item)` balance rows; adds `HasReceived` from historical `LootAward` data; DataTables search by item and player (not +1 / received / reserved columns) |
 | Session detail | All `SessionReservationResult` for that session + current cumulative +1 lookup |
 
 ## What is NOT counted

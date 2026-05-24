@@ -1,15 +1,15 @@
 ﻿@using Microsoft.AspNetCore.Localization
 @using Microsoft.Extensions.Localization
 @using SoftreserveTracker.Web.Resources
+@using SoftreserveTracker.Web.Infrastructure
 @inject IStringLocalizer<SharedResource> Localizer
 @inject IWebHostEnvironment HostEnvironment
-@inject IConfiguration Configuration
 @{
     var requestCulture = Context.Features.Get<IRequestCultureFeature>()?.RequestCulture;
     var culture = requestCulture?.UICulture?.TwoLetterISOLanguageName ?? "de";
     var wowheadLocale = culture == "de" ? "3" : "0";
     var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
-    var debugEnabled = HostEnvironment.IsDevelopment();
+    var showDebugNav = HostEnvironment.IsDevelopment();
 }
 <!DOCTYPE html>
 <html lang="@culture" data-bs-theme="dark">
@@ -41,14 +41,14 @@
                         {
                             var token = ViewBag.Token;
                             <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Roster", new { token })">@Localizer["Nav_Dashboard"]</a></li>
-                            <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Upload", new { token })">@Localizer["Nav_Upload"]</a></li>
                             <li class="nav-item"><a class="nav-link" href="@Url.Action("Players", "Overview", new { token })">@Localizer["Nav_Players"]</a></li>
                             <li class="nav-item"><a class="nav-link" href="@Url.Action("Items", "Overview", new { token })">@Localizer["Nav_Items"]</a></li>
+                            <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Upload", new { token })">@Localizer["Nav_Upload"]</a></li>
                             <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Archive", new { token })">@Localizer["Nav_Archive"]</a></li>
                         }
                     </ul>
                     <ul class="navbar-nav align-items-center">
-                        @if (debugEnabled)
+                        @if (showDebugNav)
                         {
                             <li class="nav-item">
                                 <a class="nav-link nav-debug-link" asp-controller="Debug" asp-action="Index">
@@ -95,7 +95,9 @@
     <footer>
         <div class="container-fluid container-app text-center small d-flex flex-column align-items-center gap-2">
             <img src="~/img/logo.png" alt="" class="footer-logo" asp-append-version="true" />
-            <span>Nüsslisalat Softreserve Weekly Tracker <span class="text-secondary">·</span> TBC Anniversary</span>
+            <span class="text-secondary">© Nüsslisalat @DateTime.Now.Year</span>
+            <span>Nüsslisalat Softreserve Weekly Tracker <span class="text-secondary">·</span> TBC Anniversary <span class="text-secondary">·</span> Thunderstrike Horde</span>
+            <span class="text-secondary">Build @BuildInfo.Number · @BuildInfo.BuiltAtLocal.ToString("dd.MM.yyyy HH:mm")</span>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

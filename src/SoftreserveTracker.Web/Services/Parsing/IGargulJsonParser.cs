@@ -33,4 +33,5 @@ public sealed class GargulParseResult
 public interface IGargulJsonParser
 {
     GargulParseResult Parse(string jsonContent);
+    IReadOnlySet<DateTime> GetSessionDates(string jsonContent);
 }

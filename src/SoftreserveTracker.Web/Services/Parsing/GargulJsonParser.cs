@@ -30,6 +30,12 @@ public sealed class GargulJsonParser : IGargulJsonParser
         };
     }
 
+    public IReadOnlySet<DateTime> GetSessionDates(string jsonContent) =>
+        Parse(jsonContent).GroupsBySoftresId.Values
+            .SelectMany(g => g)
+            .Select(e => e.AwardedAt.Date)
+            .ToHashSet();
+
     private static GargulLootEntry MapEntry(GargulJsonItem item)
     {
         var awardedTo = item.AwardedTo ?? string.Empty;

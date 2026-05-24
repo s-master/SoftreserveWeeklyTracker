@@ -1,6 +1,6 @@
 # Data Model
 
-Entity relationship overview for the SQLite database (EF Core). Schema defined in `Data/AppDbContext.cs`; initial migration `20260522203035_InitialCreate`.
+Entity relationship overview for the SQLite database (EF Core). Schema defined in `Data/AppDbContext.cs`; migrations under `Migrations/` (incl. `AddKnownItems`, `AddLootRolls`).
 
 ```mermaid
 erDiagram
@@ -11,6 +11,7 @@ erDiagram
     RaidSession ||--o{ LootAward : has
     RaidSession ||--o{ SessionReservationResult : has
     RaidSession ||--o{ UploadedFile : archives
+    LootAward ||--o{ LootRoll : has
     Player ||--o{ SoftReserve : makes
     Player ||--o{ LootAward : wins
     Player ||--o{ PlusOneBalance : tracks
@@ -98,6 +99,24 @@ erDiagram
         enum UploadFileType
         datetime UploadedAt
     }
+
+    KnownItem {
+        int ItemId PK
+        string Name
+    }
+
+    LootRoll {
+        int Id PK
+        int LootAwardId FK
+        int PlayerId FK
+        string PlayerName
+        int RollAmount
+        string PlayerClass
+        string Classification
+        int Priority
+        int PlusOneState
+        datetime RolledAt
+    }
 ```
 
 ## Entity descriptions
@@ -151,12 +170,20 @@ App_Data/archives/{raidSessionId}/{timestamp}_{hash}_{originalFileName}
 
 `UploadFileType`: `SoftresCsv` | `GargulJson`.
 
+### KnownItem
+
+Global lookup table: WoW **item ID → display name** for search and display support. Populated on import from Softres CSV (`Item` column) and Gargul JSON (`itemLink` via `WoWItemLinkParser`). Not roster-scoped. Missing names can be backfilled from archived uploads when the item overview is opened (`KnownItemService.SyncFromRosterArchivesAsync`).
+
+### LootRoll
+
+Individual roll lines from Gargul attached to a `LootAward` (MS/OS, amount, class, priority, +1 state).
+
 ## Source file mapping
 
 | Source | Written to | Also determines |
 |--------|------------|-----------------|
-| Softres CSV | `SoftReserve`, archived `UploadedFile` | CSV raid type, `SessionDate`, raid week reference time |
-| Gargul JSON | `LootAward`, archived `UploadedFile` | Session split by `softresID`, per-group raid type |
+| Softres CSV | `SoftReserve`, `KnownItem`, archived `UploadedFile` | CSV raid type, `SessionDate`, raid week reference time |
+| Gargul JSON | `LootAward`, `LootRoll`, `KnownItem`, archived `UploadedFile` | Session split by `softresID`, per-group raid type |
 
 ## Indexes (unique constraints)
 
@@ -175,6 +202,7 @@ App_Data/archives/{raidSessionId}/{timestamp}_{hash}_{originalFileName}
 | Service | Role |
 |---------|------|
 | `RaidImportService` | Orchestrates parse → persist → recalc |
+| `KnownItemService` | Upsert/search item names; archive backfill |
 | `PlusOneCalculator` | Pure +1 logic over session inputs |
 | `SoftresCsvParser` / `GargulJsonParser` | File parsing |
 | `RaidWindowCalculator` | Raid week boundaries |

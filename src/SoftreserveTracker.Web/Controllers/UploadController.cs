@@ -49,9 +49,9 @@ public class UploadController(
         {
             var result = await importService.ImportBulkAsync(CurrentRoster.Id, inputs, cancellationToken);
 
-            TempData["Success"] = result.RaidNightsImported == 1
+            TempData["Success"] = (result.RaidNightsImported == 1
                 ? localizer["Upload_SuccessSingle", result.CreatedSessionIds.Count]
-                : localizer["Upload_SuccessBulk", result.RaidNightsImported, result.CreatedSessionIds.Count];
+                : localizer["Upload_SuccessBulk", result.RaidNightsImported, result.CreatedSessionIds.Count]).Value;
 
             if (result.Warnings.Count > 0)
             {

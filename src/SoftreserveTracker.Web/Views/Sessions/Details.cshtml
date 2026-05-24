@@ -11,7 +11,12 @@
         <partial name="_RaidTypeBadge" model="session.RaidType.ToString()" />
         @if (!string.IsNullOrEmpty(session.SoftresId))
         {
-            <span class="ms-2">@Localizer["Col_SoftresId"]: @session.SoftresId</span>
+            <span class="ms-2">
+                @Localizer["Col_SoftresId"]:
+                <a href="https://softres.it/raid/@session.SoftresId"
+                   target="_blank"
+                   rel="noopener noreferrer">@session.SoftresId</a>
+            </span>
         }
     </p>
 </div>

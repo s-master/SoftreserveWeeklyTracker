@@ -11,7 +11,7 @@ Web app for **Nüsslisalat** (TBC Anniversary) to track soft reserve +1 points a
 - 🏰 Raid type from CSV boss names or Gargul loot item IDs
 - 🔀 Split Gargul nights by `softresID` when SSC and TK run the same evening
 - ➕ +1 calculation per player and item, per roster
-- 📊 Session, week, player, and item overviews (DataTables)
+- 📊 Session, week, player, and item overviews (DataTables; item view searchable by item name/ID and player name)
 - 🎲 Player page with roll history (MS/OS, roll amount)
 - 📁 Archive of uploaded export files
 - 🔗 Roster links protected by GUID (no login)
@@ -86,14 +86,15 @@ docs/
 
 Uploads are stored under `App_Data/archives/{sessionId}/` (not in git).
 
-## 🐛 Debug (Development only)
+## 🐛 Debug
 
-`/debug` is available only when `ASPNETCORE_ENVIRONMENT=Development`. Use it to clear imports or delete test rosters. Production must use `Production`.
+`/debug` is available when `ASPNETCORE_ENVIRONMENT=Development` **or** `Debug:Enabled=true` in `appsettings.json`. The navbar link appears only in Development; the URL works whenever debug is enabled (useful for officer testing on Production). Clear imports or delete test rosters there.
 
 ## 📥 Import notes
 
-- Softres CSV vs Gargul JSON is detected automatically and paired by session date
+- Softres CSV vs Gargul JSON is detected automatically; bulk pairing matches CSV date to any Gargul export containing loot on that date
 - Re-import of the same date/raid/softresID is skipped (use Debug to clear imports first)
+- Continued raid evenings without new CSV: softres carry-forward from the same `softresID` (see [docs/WORKFLOW.md](docs/WORKFLOW.md))
 - Bulk upload runs in one database transaction per batch
 
 ## 🔒 Not in this repository

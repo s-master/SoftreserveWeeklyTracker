@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace SoftreserveTracker.Web.Infrastructure;
 
-public sealed class DebugEnabledFilter(IWebHostEnvironment env) : IActionFilter
+public sealed class DebugEnabledFilter(IWebHostEnvironment env, IConfiguration configuration) : IActionFilter
 {
     public void OnActionExecuting(ActionExecutingContext context)
     {
@@ -18,7 +18,7 @@ public sealed class DebugEnabledFilter(IWebHostEnvironment env) : IActionFilter
     }
 
     private bool IsDebugEnabled() =>
-        env.IsDevelopment();
+        env.IsDevelopment() || configuration.GetValue("Debug:Enabled", false);
 }
 
 public sealed class DebugEnabledAttribute : ServiceFilterAttribute

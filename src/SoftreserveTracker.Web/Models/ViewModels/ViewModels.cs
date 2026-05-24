@@ -30,6 +30,7 @@ public sealed class ReservationRowViewModel
 public sealed class ItemOverviewRowViewModel
 {
     public int ItemId { get; set; }
+    public string? ItemName { get; set; }
     public PlayerDisplayViewModel Player { get; set; } = new();
     public int CurrentPlusOne { get; set; }
     public bool HasReceived { get; set; }
