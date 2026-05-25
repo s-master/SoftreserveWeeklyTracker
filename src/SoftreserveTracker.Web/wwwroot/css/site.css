@@ -256,6 +256,72 @@ footer {
     flex-shrink: 0;
 }
 
+.item-drop-card {
+    overflow: hidden;
+}
+
+.item-drop-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid var(--sr-border);
+}
+
+.item-drop-meta-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.item-drop-session-link {
+    color: var(--sr-link);
+    text-decoration: none;
+}
+
+.item-drop-session-link:hover {
+    color: var(--sr-accent);
+}
+
+.item-drop-meta-detail {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    font-size: 0.875rem;
+}
+
+.item-drop-recipient {
+    text-align: right;
+}
+
+.item-drop-rolls.table-softres-wrap {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.item-drop-rolls .table-softres {
+    --bs-table-striped-bg: transparent;
+}
+
+.table-softres tbody tr.item-drop-winner-row {
+    --bs-table-bg: rgba(106, 191, 75, 0.1);
+    --bs-table-hover-bg: rgba(106, 191, 75, 0.14);
+}
+
+.table-softres tbody tr.item-drop-winner-row td {
+    border-top-color: rgba(106, 191, 75, 0.25);
+    border-bottom-color: rgba(106, 191, 75, 0.25);
+}
+
+.item-drop-no-rolls {
+    padding-top: 0.15rem;
+}
+
 .table-softres .item-search-text {
     position: absolute !important;
     width: 1px !important;

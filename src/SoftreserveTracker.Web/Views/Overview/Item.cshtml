@@ -1,0 +1,281 @@
+@model SoftreserveTracker.Web.Models.ViewModels.ItemDetailViewModel
+@using Microsoft.AspNetCore.Localization
+@{
+    ViewData["Title"] = Model.ItemName ?? Model.ItemId.ToString();
+    var token = ViewBag.Token;
+    var requestCulture = ViewContext.HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture;
+    var culture = requestCulture?.UICulture?.TwoLetterISOLanguageName ?? "de";
+    var isGerman = culture == "de";
+    var wowheadHost = isGerman ? "de.wowhead.com" : "www.wowhead.com";
+    var wowheadDomain = isGerman ? "de" : "www";
+}
+
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-2">
+            <li class="breadcrumb-item"><a href="@Url.Action("Items", "Overview", new { token })">@Localizer["Nav_Items"]</a></li>
+            <li class="breadcrumb-item active">@(Model.ItemName ?? Model.ItemId.ToString())</li>
+        </ol>
+    </nav>
+    <h1 class="h2 mb-0 d-flex align-items-center gap-2 flex-wrap">
+        <a href="https://@wowheadHost/tbc/item=@Model.ItemId"
+           data-wowhead="item=@Model.ItemId&domain=@wowheadDomain"
+           class="item-link item-detail-title"
+           target="_blank"
+           rel="noopener noreferrer">@Model.ItemId</a>
+        @if (!string.IsNullOrWhiteSpace(Model.ItemName))
+        {
+            <span class="text-secondary fw-normal">@Model.ItemName</span>
+        }
+        <a href="https://@wowheadHost/tbc/item=@Model.ItemId"
+           class="btn btn-sm btn-outline-light ms-1"
+           target="_blank"
+           rel="noopener noreferrer"
+           title="Wowhead">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </a>
+    </h1>
+</div>
+
+@if (Model.ActivePlusOnes.Any())
+{
+    <h2 class="h5 mb-3">@Localizer["Item_ActivePlusOnes"]</h2>
+    <div class="table-softres-wrap table-softres-scroll mb-4">
+        <table class="table table-softres table-sm mb-0">
+            <thead>
+                <tr>
+                    <th class="col-compact">@Localizer["Col_Player"]</th>
+                    <th class="col-compact">@Localizer["Col_CurrentPlusOne"]</th>
+                    <th class="col-compact">@Localizer["Col_Received"]</th>
+                    <th class="col-compact">@Localizer["Col_ReservedAt"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model.ActivePlusOnes)
+                {
+                    <tr>
+                        <td class="col-compact"><partial name="_PlayerDisplay" model="row.Player" /></td>
+                        <td class="col-compact"><span class="badge bg-info text-dark">@row.CurrentPlusOne</span></td>
+                        <td class="col-compact">@(row.HasReceived ? Localizer["Yes"].Value : Localizer["No"].Value)</td>
+                        <td class="col-compact">@(row.LastReservedAt?.ToString("g") ?? "-")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<h2 class="h5 mb-3">@Localizer["Item_SoftReserves"]</h2>
+@if (!Model.SoftReserves.Any())
+{
+    <div class="alert alert-softres mb-4">@Localizer["Item_NoSoftReserves"]</div>
+}
+else
+{
+    <div class="table-softres-wrap table-softres-scroll mb-4">
+        <table class="table table-softres table-striped w-100" id="softresTable">
+            <thead>
+                <tr>
+                    <th class="col-compact">@Localizer["Col_Player"]</th>
+                    <th class="col-compact">@Localizer["Col_Date"]</th>
+                    <th class="col-compact">@Localizer["Col_Raid"]</th>
+                    <th class="col-compact">@Localizer["Col_Boss"]</th>
+                    <th class="col-compact">@Localizer["Col_ReservedAt"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model.SoftReserves)
+                {
+                    <tr>
+                        <td class="col-compact"><partial name="_PlayerDisplay" model="row.Player" /></td>
+                        <td class="col-compact">
+                            <a href="@Url.Action("Details", "Sessions", new { token, id = row.SessionId })">@row.SessionDate.ToString("yyyy-MM-dd")</a>
+                        </td>
+                        <td class="col-compact"><partial name="_RaidTypeBadge" model="row.RaidType" /></td>
+                        <td class="col-compact">@(row.BossSource ?? "-")</td>
+                        <td class="col-compact">@row.ReservedAt.ToString("g")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<h2 class="h5 mb-3">@Localizer["Item_DropEvents"]</h2>
+@if (!Model.DropEvents.Any())
+{
+    <div class="alert alert-softres mb-4">@Localizer["Item_NoDrops"]</div>
+}
+else
+{
+    @foreach (var drop in Model.DropEvents)
+    {
+        var hasRolls = drop.Rolls.Any();
+        <div class="card-softres item-drop-card p-3 mb-4">
+            <div class="item-drop-meta">
+                <div class="item-drop-meta-primary">
+                    <a class="item-drop-session-link fw-semibold"
+                       href="@Url.Action("Details", "Sessions", new { token, id = drop.SessionId })">@drop.SessionDate.ToString("yyyy-MM-dd")</a>
+                    <partial name="_RaidTypeBadge" model="drop.RaidType" />
+                </div>
+                <div class="item-drop-meta-detail text-secondary">
+                    <i class="fa-regular fa-clock me-1" aria-hidden="true"></i>
+                    <span>@Localizer["Item_DroppedAt"] @drop.AwardedAt.ToString("g")</span>
+                    @if (drop.SoftReserveWin)
+                    {
+                        <span class="badge bg-success ms-1">SR</span>
+                    }
+                    @if (drop.IsDisenchanted)
+                    {
+                        <span class="badge bg-secondary ms-1">|de|</span>
+                    }
+                </div>
+                @if (!hasRolls)
+                {
+                    <div class="item-drop-recipient ms-md-auto">
+                        <span class="text-secondary small d-block">@Localizer["Col_AwardedTo"]</span>
+                        @if (drop.Winner == null)
+                        {
+                            <span>-</span>
+                        }
+                        else if (drop.IsDisenchanted)
+                        {
+                            <span>|de|</span>
+                        }
+                        else
+                        {
+                            <partial name="_PlayerDisplay" model="drop.Winner" />
+                        }
+                    </div>
+                }
+            </div>
+            @if (hasRolls)
+            {
+                <div class="table-softres-wrap table-softres-scroll item-drop-rolls">
+                    <table class="table table-softres table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th class="col-compact">@Localizer["Col_Player"]</th>
+                                <th class="col-compact">@Localizer["Col_Roll"]</th>
+                                <th class="col-compact">@Localizer["Col_Classification"]</th>
+                                <th class="col-compact">@Localizer["Col_RolledAt"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var roll in drop.Rolls)
+                            {
+                                <tr class="@(roll.IsWinner ? "item-drop-winner-row" : null)">
+                                    <td class="col-compact">
+                                        @if (roll.IsWinner)
+                                        {
+                                            <i class="fa-solid fa-trophy text-warning me-1" title="@Localizer["Item_Winner"]" aria-hidden="true"></i>
+                                        }
+                                        <partial name="_PlayerDisplay" model="roll.Player" />
+                                    </td>
+                                    <td class="col-compact"><strong>@roll.RollAmount</strong></td>
+                                    <td class="col-compact"><partial name="_RollClassification" model="roll.Classification" /></td>
+                                    <td class="col-compact">@roll.RolledAt.ToString("g")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-secondary small mb-0 item-drop-no-rolls">@Localizer["Item_NoRollsForDrop"]</p>
+            }
+        </div>
+    }
+}
+
+<h2 class="h5 mb-3">@Localizer["Item_PlusOneHistory"]</h2>
+@if (!Model.PlusOneHistory.Any())
+{
+    <div class="alert alert-softres mb-4">@Localizer["Item_NoPlusOneHistory"]</div>
+}
+else
+{
+    <div class="table-softres-wrap table-softres-scroll mb-4">
+        <table class="table table-softres table-striped w-100" id="plusOneHistoryTable">
+            <thead>
+                <tr>
+                    <th class="col-compact">@Localizer["Col_Player"]</th>
+                    <th class="col-compact">@Localizer["Col_Date"]</th>
+                    <th class="col-compact">@Localizer["Col_Raid"]</th>
+                    <th class="col-compact">@Localizer["Col_ReservedAt"]</th>
+                    <th class="col-compact">@Localizer["Col_Dropped"]</th>
+                    <th class="col-compact">@Localizer["Col_Received"]</th>
+                    <th class="col-compact">@Localizer["Col_Roll"]</th>
+                    <th class="col-compact">@Localizer["Col_Classification"]</th>
+                    <th class="col-compact">@Localizer["Col_PlusOneDelta"]</th>
+                    <th class="col-nowrap">@Localizer["Col_Reason"]</th>
+                    <th class="col-compact">@Localizer["Col_AwardedTo"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model.PlusOneHistory)
+                {
+                    <tr>
+                        <td class="col-compact"><partial name="_PlayerDisplay" model="row.Player" /></td>
+                        <td class="col-compact">
+                            <a href="@Url.Action("Details", "Sessions", new { token, id = row.SessionId })">@row.SessionDate.ToString("yyyy-MM-dd")</a>
+                        </td>
+                        <td class="col-compact"><partial name="_RaidTypeBadge" model="row.RaidType" /></td>
+                        <td class="col-compact">@(row.ReservedAt?.ToString("g") ?? "-")</td>
+                        <td class="col-compact">@(row.ItemDropped ? Localizer["Yes"].Value : Localizer["No"].Value)</td>
+                        <td class="col-compact">@(row.PlayerReceived ? Localizer["Yes"].Value : Localizer["No"].Value)</td>
+                        <td class="col-compact">
+                            @if (row.RollAmount.HasValue)
+                            {
+                                <strong>@row.RollAmount</strong>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">-</span>
+                            }
+                        </td>
+                        <td class="col-compact"><partial name="_RollClassification" model="row.RollClassification" /></td>
+                        <td class="col-compact">
+                            @if (row.PlusOneDelta > 0)
+                            {
+                                <span class="badge bg-warning text-dark">+@row.PlusOneDelta</span>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">0</span>
+                            }
+                        </td>
+                        <td class="col-nowrap"><partial name="_PlusOneReason" model="row.Reason" /></td>
+                        <td class="col-compact">
+                            @if (row.AwardedTo == null)
+                            {
+                                @:- 
+                            }
+                            else if (row.AwardedTo.Name == "|de|")
+                            {
+                                @:|de|
+                            }
+                            else
+                            {
+                                <partial name="_PlayerDisplay" model="row.AwardedTo" />
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(function () {
+            if ($('#softresTable tbody tr').length) initSoftresDataTable('#softresTable', { order: [[1, 'desc']] });
+            if ($('#plusOneHistoryTable tbody tr').length) initSoftresDataTable('#plusOneHistoryTable', { order: [[1, 'desc']] });
+            if (window.$WowheadPower && typeof $WowheadPower.refreshLinks === 'function') {
+                $WowheadPower.refreshLinks(true);
+            }
+        });
+    </script>
+}

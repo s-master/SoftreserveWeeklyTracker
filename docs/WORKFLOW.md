@@ -122,6 +122,7 @@ All roster pages use prefix `/r/{token}`.
 | `/r/{token}/weeks/{id}` | `Weeks` | All reservation results in one raid week |
 | `/r/{token}/overview/players` | `Overview` | Cumulative +1 by player |
 | `/r/{token}/overview/items` | `Overview` | Cumulative +1 by item |
+| `/r/{token}/overview/items/{itemId}` | `Overview` | Item detail: softres, drops, rolls, +1 history |
 | `/r/{token}/archive` | `Archive` | List uploaded source files |
 | `/r/{token}/archive/download/{id}` | `Archive` | Download archived file |
 | `/culture/set?culture=de\|en&returnUrl=…` | `Culture` | Set UI language cookie |
@@ -158,7 +159,8 @@ Available when `ASPNETCORE_ENVIRONMENT=Development` **or** `Debug:Enabled=true` 
 | View | DataTables | Notes |
 |------|------------|-------|
 | Player overview | Yes, `ordering: false` | Only balances with `CurrentCount > 0`; **grouped by player** (name shown once per block) |
-| Item overview | Yes | All `(player, item)` balances; **grouped by item**; search by **item** (ID + stored name + Wowhead) and **player name**; includes “received” flag |
+| Item overview | Yes | All `(player, item)` balances; **grouped by item**; search by **item** (ID + stored name + Wowhead) and **player name**; item links open **item detail**; includes “received” flag |
+| Item detail | Partial | Softres history, drop events with Gargul rolls, +1 history; Wowhead via header icon |
 | Session / week / archive | Yes | Standard sort/search |
 
 Tables use shared helper `initSoftresDataTable()` (`wwwroot/js/site.js`). Item names are shown via Wowhead tooltips (`Views/Shared/_ItemLink.cshtml`, opens in new tab). In the **item overview**, extra item search terms live in a hidden `.item-search-text` span; the **player column** is searchable by display name. Columns +1, Erhalten/Received, and Reserviert/Reserved are excluded from search. Item column uses `white-space: nowrap` with horizontal scroll if needed.

@@ -46,6 +46,20 @@
   <data name="Session_Title" xml:space="preserve"><value>Session</value></data>
   <data name="Overview_Players_Title" xml:space="preserve"><value>Kumulative Spielerübersicht (+1)</value></data>
   <data name="Overview_Items_Title" xml:space="preserve"><value>Item-Übersicht (+1)</value></data>
+  <data name="Item_ActivePlusOnes" xml:space="preserve"><value>Aktuelle +1</value></data>
+  <data name="Item_SoftReserves" xml:space="preserve"><value>Softres-Historie</value></data>
+  <data name="Item_NoSoftReserves" xml:space="preserve"><value>Keine Softres-Einträge für dieses Item.</value></data>
+  <data name="Item_DropEvents" xml:space="preserve"><value>Drop-Events &amp; Würfe</value></data>
+  <data name="Item_DroppedAt" xml:space="preserve"><value>Gedroppt:</value></data>
+  <data name="Item_Winner" xml:space="preserve"><value>Gewinner</value></data>
+  <data name="Col_RolledAt" xml:space="preserve"><value>Gerollt um</value></data>
+  <data name="Item_NoDrops" xml:space="preserve"><value>Dieses Item wurde noch nicht gedroppt.</value></data>
+  <data name="Item_NoRollsForDrop" xml:space="preserve"><value>Keine Würfe für diesen Drop gespeichert.</value></data>
+  <data name="Item_PlusOneHistory" xml:space="preserve"><value>+1-Verlauf pro Session</value></data>
+  <data name="Item_NoPlusOneHistory" xml:space="preserve"><value>Kein +1-Verlauf für dieses Item.</value></data>
+  <data name="Col_Boss" xml:space="preserve"><value>Boss</value></data>
+  <data name="Og_ItemDetail_Title" xml:space="preserve"><value>{0} – {1}</value></data>
+  <data name="Og_ItemDetail_Description" xml:space="preserve"><value>{0} aktive +1, {1} Drops, {2} Softres-Einträge. Details, Würfe und Verlauf.</value></data>
   <data name="Archive_Title" xml:space="preserve"><value>Datei-Archiv</value></data>
   <data name="Col_Player" xml:space="preserve"><value>Spieler</value></data>
   <data name="Col_Item" xml:space="preserve"><value>Item</value></data>

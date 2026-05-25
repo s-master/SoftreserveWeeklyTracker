@@ -6,9 +6,23 @@
     var isGerman = culture == "de";
     var wowheadHost = isGerman ? "de.wowhead.com" : "www.wowhead.com";
     var wowheadDomain = isGerman ? "de" : "www";
+    var token = ViewBag.Token;
+    var linkToDetail = token != null && ViewBag.ItemLinkExternalOnly != true;
+    var href = linkToDetail
+        ? Url.Action("Item", "Overview", new { token, itemId = Model })!
+        : $"https://{wowheadHost}/tbc/item={Model}";
 }
-<a href="https://@wowheadHost/tbc/item=@Model"
-   data-wowhead="item=@Model&domain=@wowheadDomain"
-   class="item-link"
-   target="_blank"
-   rel="noopener noreferrer">@Model</a>
+@if (linkToDetail)
+{
+    <a href="@href"
+       data-wowhead="item=@Model&domain=@wowheadDomain"
+       class="item-link">@Model</a>
+}
+else
+{
+    <a href="@href"
+       data-wowhead="item=@Model&domain=@wowheadDomain"
+       class="item-link"
+       target="_blank"
+       rel="noopener noreferrer">@Model</a>
+}

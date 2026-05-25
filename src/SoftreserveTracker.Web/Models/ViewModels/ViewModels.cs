@@ -121,6 +121,76 @@ public sealed class PlayerRollRowViewModel
     public string? Classification { get; set; }
 }
 
+public sealed class ItemDetailViewModel
+{
+    public int ItemId { get; set; }
+    public string? ItemName { get; set; }
+    public List<ItemPlusOneHolderRowViewModel> ActivePlusOnes { get; set; } = [];
+    public List<ItemSoftReserveRowViewModel> SoftReserves { get; set; } = [];
+    public List<ItemDropEventViewModel> DropEvents { get; set; } = [];
+    public List<ItemPlusOneHistoryRowViewModel> PlusOneHistory { get; set; } = [];
+}
+
+public sealed class ItemPlusOneHolderRowViewModel
+{
+    public PlayerDisplayViewModel Player { get; set; } = new();
+    public int CurrentPlusOne { get; set; }
+    public DateTime? LastReservedAt { get; set; }
+    public bool HasReceived { get; set; }
+}
+
+public sealed class ItemSoftReserveRowViewModel
+{
+    public PlayerDisplayViewModel Player { get; set; } = new();
+    public DateTime SessionDate { get; set; }
+    public string RaidType { get; set; } = string.Empty;
+    public int WeekNumber { get; set; }
+    public int SessionId { get; set; }
+    public DateTime ReservedAt { get; set; }
+    public string? BossSource { get; set; }
+}
+
+public sealed class ItemDropEventViewModel
+{
+    public int LootAwardId { get; set; }
+    public DateTime SessionDate { get; set; }
+    public string RaidType { get; set; } = string.Empty;
+    public int WeekNumber { get; set; }
+    public int SessionId { get; set; }
+    public DateTime AwardedAt { get; set; }
+    public PlayerDisplayViewModel? Winner { get; set; }
+    public bool SoftReserveWin { get; set; }
+    public bool IsDisenchanted { get; set; }
+    public List<ItemDropRollRowViewModel> Rolls { get; set; } = [];
+}
+
+public sealed class ItemDropRollRowViewModel
+{
+    public PlayerDisplayViewModel Player { get; set; } = new();
+    public int RollAmount { get; set; }
+    public string? Classification { get; set; }
+    public int? Priority { get; set; }
+    public DateTime RolledAt { get; set; }
+    public bool IsWinner { get; set; }
+}
+
+public sealed class ItemPlusOneHistoryRowViewModel
+{
+    public PlayerDisplayViewModel Player { get; set; } = new();
+    public DateTime SessionDate { get; set; }
+    public string RaidType { get; set; } = string.Empty;
+    public int WeekNumber { get; set; }
+    public int SessionId { get; set; }
+    public DateTime? ReservedAt { get; set; }
+    public bool ItemDropped { get; set; }
+    public bool PlayerReceived { get; set; }
+    public int PlusOneDelta { get; set; }
+    public string Reason { get; set; } = string.Empty;
+    public PlayerDisplayViewModel? AwardedTo { get; set; }
+    public int? RollAmount { get; set; }
+    public string? RollClassification { get; set; }
+}
+
 public sealed class SessionSummaryViewModel
 {
     public int Id { get; set; }

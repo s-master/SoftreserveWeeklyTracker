@@ -92,6 +92,22 @@ public class OverviewController(
         return View(rows);
     }
 
+    [HttpGet("items/{itemId:int}")]
+    public async Task<IActionResult> Item(int itemId, CancellationToken cancellationToken)
+    {
+        var detail = await BuildItemDetailAsync(itemId, cancellationToken);
+        if (detail == null)
+        {
+            return NotFound();
+        }
+
+        ViewBag.Token = AccessToken;
+        SetOpenGraph(
+            localizer["Og_ItemDetail_Title", detail.ItemName ?? detail.ItemId.ToString(), CurrentRoster.Name].Value,
+            localizer["Og_ItemDetail_Description", detail.ActivePlusOnes.Count, detail.DropEvents.Count, detail.SoftReserves.Count].Value);
+        return View(detail);
+    }
+
     private async Task<List<PlayerOverviewRowViewModel>> BuildPlayerOverviewAsync(CancellationToken cancellationToken)
     {
         var balances = await db.PlusOneBalances
@@ -337,5 +353,227 @@ public class OverviewController(
                 HasReceived = receivedSet.Contains((entry.PlayerId, entry.ItemId)),
                 LastReservedAt = lastLookup.GetValueOrDefault((entry.PlayerId, entry.ItemId))
             }).ToList();
+    }
+
+    private async Task<ItemDetailViewModel?> BuildItemDetailAsync(int itemId, CancellationToken cancellationToken)
+    {
+        var rosterId = CurrentRoster.Id;
+
+        var hasData =
+            await db.PlusOneBalances
+                .AsNoTracking()
+                .AnyAsync(b => b.ItemId == itemId && b.Player.RosterId == rosterId, cancellationToken)
+            || await db.SoftReserves
+                .AsNoTracking()
+                .AnyAsync(r => r.ItemId == itemId && r.RaidSession.RaidWeek.RosterId == rosterId, cancellationToken)
+            || await db.LootAwards
+                .AsNoTracking()
+                .AnyAsync(l => l.ItemId == itemId && l.RaidSession.RaidWeek.RosterId == rosterId, cancellationToken)
+            || await db.SessionReservationResults
+                .AsNoTracking()
+                .AnyAsync(r => r.ItemId == itemId && r.Player.RosterId == rosterId, cancellationToken);
+
+        if (!hasData)
+        {
+            return null;
+        }
+
+        var itemNames = await knownItemService.GetNamesByItemIdsAsync([itemId], cancellationToken);
+        if (!itemNames.ContainsKey(itemId))
+        {
+            await knownItemService.SyncFromRosterArchivesAsync(rosterId, cancellationToken);
+            itemNames = await knownItemService.GetNamesByItemIdsAsync([itemId], cancellationToken);
+        }
+
+        var receivedPlayerIds = await db.LootAwards
+            .AsNoTracking()
+            .Where(l => l.ItemId == itemId
+                        && l.RaidSession.RaidWeek.RosterId == rosterId
+                        && l.WinnerPlayerId != null
+                        && !l.IsDisenchanted)
+            .Select(l => l.WinnerPlayerId!.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var receivedSet = receivedPlayerIds.ToHashSet();
+
+        var balances = await db.PlusOneBalances
+            .AsNoTracking()
+            .Include(b => b.Player)
+            .Where(b => b.ItemId == itemId && b.Player.RosterId == rosterId && b.CurrentCount > 0)
+            .OrderByDescending(b => b.CurrentCount)
+            .ThenBy(b => b.Player.Name)
+            .ToListAsync(cancellationToken);
+
+        var softReserves = await db.SoftReserves
+            .AsNoTracking()
+            .Include(r => r.Player)
+            .Include(r => r.RaidSession).ThenInclude(s => s.RaidWeek)
+            .Where(r => r.ItemId == itemId && r.RaidSession.RaidWeek.RosterId == rosterId)
+            .OrderByDescending(r => r.ReservedAt)
+            .ToListAsync(cancellationToken);
+
+        var dropAwards = await db.LootAwards
+            .AsNoTracking()
+            .Include(l => l.WinnerPlayer)
+            .Include(l => l.Rolls).ThenInclude(r => r.Player)
+            .Include(l => l.RaidSession).ThenInclude(s => s.RaidWeek)
+            .Where(l => l.ItemId == itemId && l.RaidSession.RaidWeek.RosterId == rosterId)
+            .OrderByDescending(l => l.AwardedAt)
+            .ToListAsync(cancellationToken);
+
+        var plusOneHistory = await db.SessionReservationResults
+            .AsNoTracking()
+            .Include(r => r.Player)
+            .Include(r => r.AwardedToPlayer)
+            .Include(r => r.RaidSession).ThenInclude(s => s.RaidWeek)
+            .Where(r => r.ItemId == itemId && r.Player.RosterId == rosterId)
+            .OrderByDescending(r => r.RaidSession.SessionDate)
+            .ThenBy(r => r.Player.Name)
+            .ToListAsync(cancellationToken);
+
+        var playerIds = balances.Select(b => b.PlayerId)
+            .Concat(softReserves.Select(r => r.PlayerId))
+            .Concat(dropAwards.Where(l => l.WinnerPlayerId.HasValue).Select(l => l.WinnerPlayerId!.Value))
+            .Concat(dropAwards.SelectMany(l => l.Rolls).Where(r => r.PlayerId.HasValue).Select(r => r.PlayerId!.Value))
+            .Concat(plusOneHistory.Select(r => r.PlayerId))
+            .Concat(plusOneHistory.Where(r => r.AwardedToPlayerId.HasValue).Select(r => r.AwardedToPlayerId!.Value))
+            .Distinct()
+            .ToList();
+
+        var classLookup = playerIds.Count == 0
+            ? new Dictionary<int, PlayerClassInfo>()
+            : new Dictionary<int, PlayerClassInfo>(
+                await playerClassLookup.GetLatestByPlayerIdsAsync(playerIds, cancellationToken));
+
+        var lastReserved = softReserves
+            .GroupBy(r => r.PlayerId)
+            .ToDictionary(g => g.Key, g => (DateTime?)g.Max(r => r.ReservedAt));
+
+        var softresBySessionPlayer = softReserves
+            .GroupBy(r => (r.RaidSessionId, r.PlayerId))
+            .ToDictionary(g => g.Key, g => (DateTime?)g.Max(r => r.ReservedAt));
+
+        var rollBySessionPlayer = dropAwards
+            .SelectMany(a => a.Rolls.Where(r => r.PlayerId.HasValue).Select(r => new
+            {
+                a.RaidSessionId,
+                r.PlayerId,
+                r.RollAmount,
+                r.Classification
+            }))
+            .GroupBy(x => (x.RaidSessionId, x.PlayerId!.Value))
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(x => x.RollAmount).First());
+
+        PlayerDisplayViewModel CreatePlayerDisplay(int? playerId, string? fallbackName = null)
+        {
+            if (playerId.HasValue)
+            {
+                var info = classLookup.GetValueOrDefault(playerId.Value);
+                var name = softReserves.FirstOrDefault(r => r.PlayerId == playerId)?.Player.Name
+                    ?? dropAwards.Select(l => l.WinnerPlayer).FirstOrDefault(p => p?.Id == playerId)?.Name
+                    ?? plusOneHistory.FirstOrDefault(r => r.PlayerId == playerId)?.Player.Name
+                    ?? fallbackName
+                    ?? playerId.Value.ToString();
+                return PlayerDisplayBuilder.Create(name, playerId, info);
+            }
+
+            return PlayerDisplayBuilder.Create(fallbackName ?? "?", null, null);
+        }
+
+        return new ItemDetailViewModel
+        {
+            ItemId = itemId,
+            ItemName = itemNames.GetValueOrDefault(itemId),
+            ActivePlusOnes = balances.Select(b => new ItemPlusOneHolderRowViewModel
+            {
+                Player = PlayerDisplayBuilder.Create(
+                    b.Player.Name,
+                    b.PlayerId,
+                    classLookup.GetValueOrDefault(b.PlayerId)),
+                CurrentPlusOne = b.CurrentCount,
+                LastReservedAt = lastReserved.GetValueOrDefault(b.PlayerId),
+                HasReceived = receivedSet.Contains(b.PlayerId)
+            }).ToList(),
+            SoftReserves = softReserves.Select(r => new ItemSoftReserveRowViewModel
+            {
+                Player = PlayerDisplayBuilder.Create(
+                    r.Player.Name,
+                    r.PlayerId,
+                    classLookup.GetValueOrDefault(r.PlayerId)),
+                SessionDate = r.RaidSession.SessionDate,
+                RaidType = r.RaidSession.RaidType.ToString(),
+                WeekNumber = r.RaidSession.RaidWeek.WeekNumber,
+                SessionId = r.RaidSessionId,
+                ReservedAt = r.ReservedAt,
+                BossSource = r.BossSource
+            }).ToList(),
+            DropEvents = dropAwards.Select(a =>
+            {
+                var winnerId = a.IsDisenchanted ? null : a.WinnerPlayerId;
+                return new ItemDropEventViewModel
+                {
+                    LootAwardId = a.Id,
+                    SessionDate = a.RaidSession.SessionDate,
+                    RaidType = a.RaidSession.RaidType.ToString(),
+                    WeekNumber = a.RaidSession.RaidWeek.WeekNumber,
+                    SessionId = a.RaidSessionId,
+                    AwardedAt = a.AwardedAt,
+                    Winner = a.IsDisenchanted
+                        ? PlayerDisplayBuilder.Create("|de|", null, null)
+                        : winnerId.HasValue
+                            ? CreatePlayerDisplay(winnerId)
+                            : null,
+                    SoftReserveWin = a.SoftReserveWin,
+                    IsDisenchanted = a.IsDisenchanted,
+                    Rolls = a.Rolls
+                        .OrderByDescending(r => r.RollAmount)
+                        .ThenBy(r => r.PlayerName)
+                        .Select(r => new ItemDropRollRowViewModel
+                        {
+                            Player = r.PlayerId.HasValue
+                                ? CreatePlayerDisplay(r.PlayerId, r.PlayerName)
+                                : PlayerDisplayBuilder.Create(r.PlayerName, null, null),
+                            RollAmount = r.RollAmount,
+                            Classification = r.Classification,
+                            Priority = r.Priority,
+                            RolledAt = r.RolledAt,
+                            IsWinner = !a.IsDisenchanted && r.PlayerId == winnerId
+                        }).ToList()
+                };
+            }).ToList(),
+            PlusOneHistory = plusOneHistory.Select(r =>
+            {
+                var roll = r.PlayerId != 0
+                    ? rollBySessionPlayer.GetValueOrDefault((r.RaidSessionId, r.PlayerId))
+                    : null;
+                return new ItemPlusOneHistoryRowViewModel
+                {
+                    Player = PlayerDisplayBuilder.Create(
+                        r.Player.Name,
+                        r.PlayerId,
+                        classLookup.GetValueOrDefault(r.PlayerId)),
+                    SessionDate = r.RaidSession.SessionDate,
+                    RaidType = r.RaidSession.RaidType.ToString(),
+                    WeekNumber = r.RaidSession.RaidWeek.WeekNumber,
+                    SessionId = r.RaidSessionId,
+                    ReservedAt = softresBySessionPlayer.GetValueOrDefault((r.RaidSessionId, r.PlayerId)),
+                    ItemDropped = r.ItemDropped,
+                    PlayerReceived = r.PlayerReceived,
+                    PlusOneDelta = r.PlusOneDelta,
+                    Reason = r.Reason.ToString(),
+                    AwardedTo = r.AwardedToPlayer == null
+                        ? null
+                        : PlayerDisplayBuilder.Create(
+                            r.AwardedToPlayer.Name,
+                            r.AwardedToPlayerId,
+                            classLookup.GetValueOrDefault(r.AwardedToPlayerId!.Value)),
+                    RollAmount = roll?.RollAmount,
+                    RollClassification = roll?.Classification
+                };
+            }).ToList()
+        };
     }
 }
