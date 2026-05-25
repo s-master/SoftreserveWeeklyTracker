@@ -16,16 +16,16 @@ public sealed class PlusOneCalculator : IPlusOneCalculator
 
         foreach (var weekGroup in weekGroups)
         {
-            var softresGroups = weekGroup.GroupBy(s => s.SoftresId ?? $"__session_{s.RaidSessionId}");
+            var raidTypeGroups = weekGroup.GroupBy(s => s.RaidType);
 
-            foreach (var softresGroup in softresGroups.OrderBy(g => g.Min(s => s.SessionDate)).ThenBy(g => g.Min(s => s.RaidSessionId)))
+            foreach (var raidTypeGroup in raidTypeGroups.OrderBy(g => g.Min(s => s.SessionDate)).ThenBy(g => g.Min(s => s.RaidSessionId)))
             {
-                var orderedSessions = softresGroup
+                var orderedSessions = raidTypeGroup
                     .OrderBy(s => s.SessionDate)
                     .ThenBy(s => s.RaidSessionId)
                     .ToList();
 
-                ProcessSoftresGroup(orderedSessions, balances, sessionRows);
+                ProcessRaidTypeGroup(orderedSessions, balances, sessionRows);
             }
         }
 
@@ -36,7 +36,7 @@ public sealed class PlusOneCalculator : IPlusOneCalculator
         };
     }
 
-    private static void ProcessSoftresGroup(
+    private static void ProcessRaidTypeGroup(
         IReadOnlyList<PlusOneSessionInput> sessions,
         Dictionary<(int PlayerId, int ItemId), int> balances,
         List<SessionPlusOneRow> sessionRows)
@@ -44,6 +44,10 @@ public sealed class PlusOneCalculator : IPlusOneCalculator
         var evaluated = new HashSet<(int PlayerId, int ItemId)>();
         var resolved = new Dictionary<(int PlayerId, int ItemId), SessionPlusOneRow>();
         var lastSession = sessions[^1];
+        var pendingKeys = sessions
+            .SelectMany(s => s.Reservations)
+            .Select(r => (r.PlayerId, r.ItemId))
+            .ToHashSet();
 
         foreach (var session in sessions)
         {
@@ -94,6 +98,23 @@ public sealed class PlusOneCalculator : IPlusOneCalculator
 
                 sessionRows.Add(row);
             }
+        }
+
+        foreach (var key in pendingKeys)
+        {
+            if (evaluated.Contains(key))
+            {
+                continue;
+            }
+
+            var reservation = new PlusOneReservationInput
+            {
+                PlayerId = key.PlayerId,
+                ItemId = key.ItemId
+            };
+            var row = EvaluateDidNotDrop(reservation, lastSession.RaidSessionId, balances);
+            sessionRows.Add(row);
+            evaluated.Add(key);
         }
     }
 

@@ -172,7 +172,7 @@ Tables use shared helper `initSoftresDataTable()` (`wwwroot/js/site.js`). Item n
 After every import, `RaidImportService.RecalculatePlusOneAsync()`:
 
 1. Loads all sessions for the roster (with raid week + softres ID)
-2. Runs `PlusOneCalculator.Calculate()` — **one +1 delta per `(RaidWeek, softresID, player, item)`**, not per raid evening
+2. Runs `PlusOneCalculator.Calculate()` — **one +1 delta per `(RaidWeek, RaidType, player, item)`**, not per raid evening
 3. Replaces all `SessionReservationResult` rows for those sessions
 4. Replaces all `PlusOneBalance` rows (only stores counts **> 0**)
 

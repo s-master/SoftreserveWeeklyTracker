@@ -352,7 +352,7 @@ public sealed class RaidImportService(
             RaidSessionId = s.Id,
             RaidWeekId = s.RaidWeekId,
             RaidWeekPeriodStart = s.RaidWeek.PeriodStart,
-            SoftresId = s.SoftresId,
+            RaidType = s.RaidType,
             SessionDate = s.SessionDate,
             Reservations = s.SoftReserves
                 .GroupBy(r => (r.PlayerId, r.ItemId))

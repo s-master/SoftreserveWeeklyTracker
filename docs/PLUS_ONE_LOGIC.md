@@ -11,13 +11,13 @@ Independent from Softres.it's own `Plus` column (ignored by the parser).
 | Applies to | **Reserved items only** (`SoftReserve` rows per session) |
 | Item scope | **Global per `ItemId`** (SSC + TK shared) |
 | Roster scope | **Per roster** (no cross-roster tracking) |
-| Evaluation unit | **Once per Raid-ID** (`RaidWeek` + same Gargul `softresID`), not per raid evening |
+| Evaluation unit | **Once per Raid-ID** (`RaidWeek` + **`RaidType`**), not per raid evening or Gargul `softresID` |
 | Accumulation | **+1, +2, +3, …** across raid IDs / weeks |
 | On receive | Balance **resets to 0** (row removed from `PlusOneBalances`) |
 
-## Per Raid-ID evaluation (same `softresID` within one raid week)
+## Per Raid-ID evaluation (same raid week + raid type)
 
-Softres.it uses **one reservation list per raid ID**. The tracker mirrors that: all `RaidSession` rows with the **same `SoftresId` in the same `RaidWeek`** form one evaluation group (e.g. TK continued on 15.05 and 17.05).
+Softres.it uses **one reservation list per raid ID**. The tracker mirrors that: all `RaidSession` rows in the **same `RaidWeek` and same `RaidType`** (e.g. TK on 15.05 and 17.05) form one evaluation group — even when Gargul uses different `softresID` values per evening.
 
 For each **soft reserve** (player `S`, item `I`) in that group, exactly **one +1 delta** is applied for the whole raid ID:
 
@@ -44,7 +44,9 @@ flowchart TD
 | 1st | Yes, lost | **+1** | Resolved immediately; carry-forward evenings show delta **0** |
 | 2nd (last) | Yes, lost | **+1** | Only if item had not dropped on an earlier evening |
 
-Sessions **without** a shared `softresID` (or loot-only sessions) are evaluated **alone** within their raid week.
+Sessions **without** softres rows on a later evening still participate: if a reservation existed on an earlier evening of the same `(RaidWeek, RaidType)` group, the +1 is applied on the **last evening** of that group.
+
+SSC and TK in the same calendar raid week remain **separate** groups (different `RaidType`).
 
 ### Drop detection
 
@@ -78,7 +80,7 @@ Raid weeks are processed **chronologically** (`RaidWeek.PeriodStart`). Within ea
 balance(S, I) = 0  // in-memory for recalc
 
 for each raid week in order:
-  for each (RaidWeek, softresID) group in week:
+  for each (RaidWeek, RaidType) group in week:
     for each session evening in group (chronological):
       for each soft reserve (S, I) in session:
         if (S, I) already resolved in this group: append follow-up row (delta 0)
