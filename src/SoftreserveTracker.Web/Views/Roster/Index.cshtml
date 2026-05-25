@@ -62,8 +62,10 @@ else
                                            rel="noopener noreferrer">@session.SoftresId</a>
                                     }
                                 </td>
-                                <td class="text-end">
-                                    <a href="@Url.Action("Details", "Sessions", new { token, id = session.Id })">@Localizer["Action_Details"]</a>
+                                <td class="text-end text-nowrap">
+                                    <a href="@Url.Action("Details", "Sessions", new { token, id = session.Id })">@Localizer["Action_Softres"]</a>
+                                    <span class="text-secondary mx-1" aria-hidden="true">·</span>
+                                    <a href="@Url.Action("LootLog", "Sessions", new { token, id = session.Id })">@Localizer["Action_LootLog"]</a>
                                 </td>
                             </tr>
                         }

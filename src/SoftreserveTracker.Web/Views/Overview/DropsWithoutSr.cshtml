@@ -1,0 +1,185 @@
+@model List<SoftreserveTracker.Web.Models.ViewModels.NonSrDropOverviewRowViewModel>
+@{
+    ViewData["Title"] = Localizer["Nav_NonSrDrops"];
+    var token = ViewBag.Token;
+}
+
+<div class="page-header">
+    <h1 class="h2">@Localizer["Overview_NonSrDrops_Title"]</h1>
+    <p class="text-secondary mb-0 small">@Localizer["Overview_NonSrDrops_Subtitle"]</p>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-softres">@Localizer["Overview_NonSrDrops_Empty"]</div>
+}
+else
+{
+    <div class="table-softres-wrap table-softres-scroll">
+        <table class="table table-softres table-striped w-100" id="nonSrDropsTable">
+            <thead>
+                <tr>
+                    <th class="col-item">@Localizer["Col_Item"]</th>
+                    <th class="col-compact">@Localizer["Col_Date"]</th>
+                    <th class="col-compact">@Localizer["Col_Raid"]</th>
+                    <th class="col-compact">@Localizer["Col_AwardedAt"]</th>
+                    <th class="col-compact">@Localizer["Col_AwardedTo"]</th>
+                    <th class="col-compact">@Localizer["Col_RollCount"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model)
+                {
+                    <tr>
+                        <td class="col-item"
+                            data-order="@(-row.ItemDropCount * 1000000 + row.ItemId)"
+                            data-item-id="@row.ItemId"
+                            data-item-name="@row.ItemName">
+                            <partial name="_ItemLink" model="row.ItemId" />
+                            @if (row.ItemDropCount > 1)
+                            {
+                                <span class="badge bg-info text-dark item-group-count ms-1"
+                                      title="@Localizer["NonSrDrops_ItemDropCount", row.ItemDropCount]">×@row.ItemDropCount</span>
+                            }
+                            <span class="item-search-text" aria-hidden="true">@row.ItemId@(string.IsNullOrWhiteSpace(row.ItemName) ? "" : $" {row.ItemName}")</span>
+                        </td>
+                        <td class="col-compact" data-order="@row.SessionDate.Ticks">
+                            <a href="@Url.Action("Details", "Sessions", new { token, id = row.SessionId })">@row.SessionDate.ToString("yyyy-MM-dd")</a>
+                        </td>
+                        <td class="col-compact"><partial name="_RaidTypeBadge" model="row.RaidType" /></td>
+                        <td class="col-compact" data-order="@row.AwardedAt.Ticks">@row.AwardedAt.ToString("g")</td>
+                        <td class="col-compact">
+                            @if (row.Winner == null)
+                            {
+                                <span class="text-secondary">-</span>
+                            }
+                            else
+                            {
+                                <partial name="_PlayerDisplay" model="row.Winner" />
+                            }
+                        </td>
+                        <td class="col-compact" data-order="@row.RollCount">
+                            @if (row.RollCount > 0)
+                            {
+                                <span>@row.RollCount</span>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">-</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function refreshNonSrDropsItemSearch(tableApi) {
+            var changed = false;
+            tableApi.rows().every(function () {
+                var cell = this.node().querySelector('td[data-item-id]');
+                if (!cell) {
+                    return;
+                }
+
+                var span = cell.querySelector('.item-search-text');
+                if (!span) {
+                    return;
+                }
+
+                var id = cell.getAttribute('data-item-id');
+                var storedName = (cell.getAttribute('data-item-name') || '').trim();
+                var link = cell.querySelector('.item-link');
+                var parts = [id];
+                if (storedName) {
+                    parts.push(storedName);
+                }
+
+                if (link) {
+                    var label = link.textContent.trim();
+                    if (label && label !== id && !/^\d+$/.test(label) && parts.indexOf(label) === -1) {
+                        parts.push(label);
+                    }
+                }
+
+                var next = parts.join(' ');
+                if (span.textContent !== next) {
+                    span.textContent = next;
+                    changed = true;
+                }
+            });
+
+            if (changed) {
+                tableApi.rows().invalidate('dom');
+            }
+        }
+
+        function collapseDuplicateNonSrItemCells(tableApi) {
+            var lastItemId = null;
+            var isFirstRow = true;
+            tableApi.rows({ page: 'current', order: 'applied' }).every(function () {
+                var row = this.node();
+                var cell = row.querySelector('td[data-item-id]');
+                if (!cell) {
+                    return;
+                }
+
+                if (!cell.dataset.itemHtml) {
+                    cell.dataset.itemHtml = cell.innerHTML;
+                } else {
+                    cell.innerHTML = cell.dataset.itemHtml;
+                }
+
+                var itemId = cell.getAttribute('data-item-id');
+                var itemLink = cell.querySelector('.item-link');
+                var countBadge = cell.querySelector('.item-group-count');
+                if (itemId === lastItemId) {
+                    cell.classList.add('item-cell-repeat');
+                    itemLink?.classList.add('visually-hidden');
+                    countBadge?.classList.add('visually-hidden');
+                    row.classList.remove('item-group-start');
+                } else {
+                    lastItemId = itemId;
+                    cell.classList.remove('item-cell-repeat');
+                    itemLink?.classList.remove('visually-hidden');
+                    countBadge?.classList.remove('visually-hidden');
+                    row.classList.toggle('item-group-start', !isFirstRow);
+                }
+
+                isFirstRow = false;
+            });
+        }
+
+        $(function () {
+            if (!$('#nonSrDropsTable tbody tr').length) {
+                return;
+            }
+
+            initSoftresDataTable('#nonSrDropsTable', {
+                order: [[0, 'asc'], [3, 'desc']],
+                columnDefs: [
+                    { targets: '.col-item', className: 'col-item' },
+                    { targets: '.col-compact', className: 'col-compact' },
+                    { targets: [1, 2, 3, 4, 5], searchable: false }
+                ],
+                initComplete: function () {
+                    var api = this.api();
+                    window.setTimeout(function () { refreshNonSrDropsItemSearch(api); }, 400);
+                    window.setTimeout(function () { refreshNonSrDropsItemSearch(api); }, 1200);
+                },
+                drawCallback: function () {
+                    var api = this.api();
+                    collapseDuplicateNonSrItemCells(api);
+                    if (window.$WowheadPower && typeof $WowheadPower.refreshLinks === 'function') {
+                        $WowheadPower.refreshLinks(true);
+                    }
+                    window.setTimeout(function () { refreshNonSrDropsItemSearch(api); }, 300);
+                    window.setTimeout(function () { refreshNonSrDropsItemSearch(api); }, 1500);
+                }
+            });
+        });
+    </script>
+}

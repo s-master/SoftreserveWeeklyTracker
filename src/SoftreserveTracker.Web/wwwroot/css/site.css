@@ -368,6 +368,12 @@ footer {
     padding-top: 0.15rem;
 }
 
+.session-view-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
 .table-softres .item-search-text {
     position: absolute !important;
     width: 1px !important;

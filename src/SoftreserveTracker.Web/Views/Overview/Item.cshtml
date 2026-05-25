@@ -93,6 +93,7 @@ else
                     <th class="col-compact">@Localizer["Col_Raid"]</th>
                     <th class="col-compact">@Localizer["Col_Boss"]</th>
                     <th class="col-compact">@Localizer["Col_ReservedAt"]</th>
+                    <th class="col-nowrap">@Localizer["Col_Note"]</th>
                 </tr>
             </thead>
             <tbody>
@@ -106,6 +107,7 @@ else
                         <td class="col-compact"><partial name="_RaidTypeBadge" model="row.RaidType" /></td>
                         <td class="col-compact">@(row.BossSource ?? "-")</td>
                         <td class="col-compact">@row.ReservedAt.ToString("g")</td>
+                        <td class="col-nowrap">@(string.IsNullOrWhiteSpace(row.Note) ? "-" : row.Note)</td>
                     </tr>
                 }
             </tbody>
@@ -215,14 +217,15 @@ else
                     <th class="col-compact">@Localizer["Col_Player"]</th>
                     <th class="col-compact">@Localizer["Col_Date"]</th>
                     <th class="col-compact">@Localizer["Col_Raid"]</th>
-                    <th class="col-compact">@Localizer["Col_ReservedAt"]</th>
-                    <th class="col-compact">@Localizer["Col_Dropped"]</th>
-                    <th class="col-compact">@Localizer["Col_Received"]</th>
-                    <th class="col-compact">@Localizer["Col_Roll"]</th>
-                    <th class="col-compact">@Localizer["Col_Classification"]</th>
-                    <th class="col-compact">@Localizer["Col_PlusOneDelta"]</th>
-                    <th class="col-nowrap">@Localizer["Col_Reason"]</th>
-                    <th class="col-compact">@Localizer["Col_AwardedTo"]</th>
+                <th class="col-compact">@Localizer["Col_ReservedAt"]</th>
+                <th class="col-compact">@Localizer["Col_Dropped"]</th>
+                <th class="col-compact">@Localizer["Col_Received"]</th>
+                <th class="col-compact">@Localizer["Col_Roll"]</th>
+                <th class="col-compact">@Localizer["Col_Classification"]</th>
+                <th class="col-compact">@Localizer["Col_PlusOneDelta"]</th>
+                <th class="col-nowrap">@Localizer["Col_Reason"]</th>
+                <th class="col-nowrap">@Localizer["Col_Note"]</th>
+                <th class="col-compact">@Localizer["Col_AwardedTo"]</th>
                 </tr>
             </thead>
             <tbody>
@@ -259,6 +262,7 @@ else
                             }
                         </td>
                         <td class="col-nowrap"><partial name="_PlusOneReason" model="row.Reason" /></td>
+                        <td class="col-nowrap">@(string.IsNullOrWhiteSpace(row.Note) ? "-" : row.Note)</td>
                         <td class="col-compact">
                             @if (row.AwardedTo == null)
                             {

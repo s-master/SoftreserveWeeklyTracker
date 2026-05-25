@@ -1,0 +1,65 @@
+@model List<SoftreserveTracker.Web.Models.ViewModels.DisenchantedOverviewRowViewModel>
+@{
+    ViewData["Title"] = Localizer["Nav_Disenchanted"];
+    var token = ViewBag.Token;
+}
+
+<div class="page-header">
+    <h1 class="h2">@Localizer["Overview_Disenchanted_Title"]</h1>
+    <p class="text-secondary mb-0 small">@Localizer["Overview_Disenchanted_Subtitle"]</p>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-softres">@Localizer["Overview_Disenchanted_Empty"]</div>
+}
+else
+{
+    <div class="table-softres-wrap table-softres-scroll">
+        <table class="table table-softres table-striped w-100" id="disenchantedTable">
+            <thead>
+                <tr>
+                    <th class="col-item">@Localizer["Col_Item"]</th>
+                    <th class="col-compact">@Localizer["Col_Date"]</th>
+                    <th class="col-compact">@Localizer["Col_Raid"]</th>
+                    <th class="col-compact">@Localizer["Col_AwardedAt"]</th>
+                    <th class="col-compact">@Localizer["Col_AwardedTo"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model)
+                {
+                    <tr>
+                        <td class="col-item"
+                            data-order="@row.ItemId"
+                            data-item-id="@row.ItemId"
+                            data-item-name="@row.ItemName">
+                            <partial name="_ItemLink" model="row.ItemId" />
+                            <span class="item-search-text" aria-hidden="true">@row.ItemId@(string.IsNullOrWhiteSpace(row.ItemName) ? "" : $" {row.ItemName}")</span>
+                        </td>
+                        <td class="col-compact" data-order="@row.SessionDate.Ticks">
+                            <a href="@Url.Action("Details", "Sessions", new { token, id = row.SessionId })">@row.SessionDate.ToString("yyyy-MM-dd")</a>
+                        </td>
+                        <td class="col-compact"><partial name="_RaidTypeBadge" model="row.RaidType" /></td>
+                        <td class="col-compact" data-order="@row.AwardedAt.Ticks">@row.AwardedAt.ToString("g")</td>
+                        <td class="col-compact">
+                            <span class="badge bg-secondary">|de|</span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(function () {
+            if (!$('#disenchantedTable tbody tr').length) {
+                return;
+            }
+
+            initSoftresDataTable('#disenchantedTable', { order: [[3, 'desc']] });
+        });
+    </script>
+}

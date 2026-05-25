@@ -108,6 +108,34 @@ public class OverviewController(
         return View(detail);
     }
 
+    [HttpGet("disenchanted")]
+    public async Task<IActionResult> Disenchanted(CancellationToken cancellationToken)
+    {
+        var rows = await BuildDisenchantedOverviewAsync(cancellationToken);
+        ViewBag.Token = AccessToken;
+
+        var itemCount = rows.Select(r => r.ItemId).Distinct().Count();
+        SetOpenGraph(
+            localizer["Og_Disenchanted_Title", CurrentRoster.Name].Value,
+            localizer["Og_Disenchanted_Description", rows.Count, itemCount].Value);
+
+        return View(rows);
+    }
+
+    [HttpGet("drops-without-sr")]
+    public async Task<IActionResult> DropsWithoutSr(CancellationToken cancellationToken)
+    {
+        var rows = await BuildNonSrDropsOverviewAsync(cancellationToken);
+        ViewBag.Token = AccessToken;
+
+        var itemCount = rows.Select(r => r.ItemId).Distinct().Count();
+        SetOpenGraph(
+            localizer["Og_NonSrDrops_Title", CurrentRoster.Name].Value,
+            localizer["Og_NonSrDrops_Description", rows.Count, itemCount].Value);
+
+        return View(rows);
+    }
+
     private async Task<List<PlayerOverviewRowViewModel>> BuildPlayerOverviewAsync(CancellationToken cancellationToken)
     {
         var balances = await db.PlusOneBalances
@@ -196,11 +224,11 @@ public class OverviewController(
             : await db.SoftReserves
                 .AsNoTracking()
                 .Where(r => r.PlayerId == playerId && sessionIds.Contains(r.RaidSessionId))
-                .Select(r => new { r.RaidSessionId, r.ItemId, r.ReservedAt })
                 .ToListAsync(cancellationToken);
 
         var softresLookup = SoftReserveLookups.ReservedAtBySessionItem(
             softresRows.Select(r => (r.RaidSessionId, r.ItemId, r.ReservedAt)));
+        var softresNoteLookup = SoftReserveLookups.NoteBySessionPlayerItem(softresRows);
 
         var awardedToIds = results
             .Where(r => r.AwardedToPlayerId.HasValue)
@@ -268,7 +296,8 @@ public class OverviewController(
                             awardedToClassLookup.GetValueOrDefault(r.AwardedToPlayerId!.Value)),
                     CurrentPlusOne = allBalances.GetValueOrDefault(r.ItemId),
                     RollAmount = roll?.RollAmount,
-                    RollClassification = roll?.Classification
+                    RollClassification = roll?.Classification,
+                    Note = softresNoteLookup.TryGetValue((r.RaidSessionId, playerId, r.ItemId), out var note) ? note : null
                 };
             }).ToList(),
             LootWon = lootWon.Select(l => new PlayerLootWonRowViewModel
@@ -353,6 +382,102 @@ public class OverviewController(
                 HasReceived = receivedSet.Contains((entry.PlayerId, entry.ItemId)),
                 LastReservedAt = lastLookup.GetValueOrDefault((entry.PlayerId, entry.ItemId))
             }).ToList();
+    }
+
+    private async Task<List<DisenchantedOverviewRowViewModel>> BuildDisenchantedOverviewAsync(CancellationToken cancellationToken)
+    {
+        var rosterId = CurrentRoster.Id;
+
+        var awards = await db.LootAwards
+            .AsNoTracking()
+            .Include(l => l.RaidSession).ThenInclude(s => s.RaidWeek)
+            .Where(l => l.IsDisenchanted && l.RaidSession.RaidWeek.RosterId == rosterId)
+            .OrderByDescending(l => l.AwardedAt)
+            .ToListAsync(cancellationToken);
+
+        if (awards.Count == 0)
+        {
+            return [];
+        }
+
+        var itemIds = awards.Select(a => a.ItemId).Distinct().ToList();
+        var itemNames = await knownItemService.GetNamesByItemIdsAsync(itemIds, cancellationToken);
+        if (itemIds.Any(id => !itemNames.ContainsKey(id)))
+        {
+            await knownItemService.SyncFromRosterArchivesAsync(rosterId, cancellationToken);
+            itemNames = await knownItemService.GetNamesByItemIdsAsync(itemIds, cancellationToken);
+        }
+
+        return awards.Select(a => new DisenchantedOverviewRowViewModel
+        {
+            ItemId = a.ItemId,
+            ItemName = itemNames.GetValueOrDefault(a.ItemId),
+            SessionDate = a.RaidSession.SessionDate,
+            RaidType = a.RaidSession.RaidType.ToString(),
+            WeekNumber = a.RaidSession.RaidWeek.WeekNumber,
+            SessionId = a.RaidSessionId,
+            AwardedAt = a.AwardedAt,
+            AwardedToRaw = a.AwardedToRaw
+        }).ToList();
+    }
+
+    private async Task<List<NonSrDropOverviewRowViewModel>> BuildNonSrDropsOverviewAsync(CancellationToken cancellationToken)
+    {
+        var rosterId = CurrentRoster.Id;
+
+        var awards = await db.LootAwards
+            .AsNoTracking()
+            .Include(l => l.WinnerPlayer)
+            .Include(l => l.Rolls)
+            .Include(l => l.RaidSession).ThenInclude(s => s.RaidWeek)
+            .Where(l => !l.SoftReserveWin
+                        && !l.IsDisenchanted
+                        && l.RaidSession.RaidWeek.RosterId == rosterId)
+            .OrderByDescending(l => l.AwardedAt)
+            .ToListAsync(cancellationToken);
+
+        if (awards.Count == 0)
+        {
+            return [];
+        }
+
+        var itemIds = awards.Select(a => a.ItemId).Distinct().ToList();
+        var winnerIds = awards.Where(a => a.WinnerPlayerId.HasValue).Select(a => a.WinnerPlayerId!.Value).Distinct().ToList();
+        var classLookup = winnerIds.Count == 0
+            ? new Dictionary<int, PlayerClassInfo>()
+            : new Dictionary<int, PlayerClassInfo>(
+                await playerClassLookup.GetLatestByPlayerIdsAsync(winnerIds, cancellationToken));
+
+        var itemNames = await knownItemService.GetNamesByItemIdsAsync(itemIds, cancellationToken);
+        if (itemIds.Any(id => !itemNames.ContainsKey(id)))
+        {
+            await knownItemService.SyncFromRosterArchivesAsync(rosterId, cancellationToken);
+            itemNames = await knownItemService.GetNamesByItemIdsAsync(itemIds, cancellationToken);
+        }
+
+        var dropCountByItem = awards.GroupBy(a => a.ItemId).ToDictionary(g => g.Key, g => g.Count());
+
+        return awards
+            .OrderByDescending(a => dropCountByItem[a.ItemId])
+            .ThenBy(a => a.ItemId)
+            .ThenByDescending(a => a.AwardedAt)
+            .Select(a => new NonSrDropOverviewRowViewModel
+        {
+            ItemId = a.ItemId,
+            ItemName = itemNames.GetValueOrDefault(a.ItemId),
+            ItemDropCount = dropCountByItem[a.ItemId],
+            SessionDate = a.RaidSession.SessionDate,
+            RaidType = a.RaidSession.RaidType.ToString(),
+            SessionId = a.RaidSessionId,
+            AwardedAt = a.AwardedAt,
+            Winner = a.WinnerPlayer == null
+                ? null
+                : PlayerDisplayBuilder.Create(
+                    a.WinnerPlayer.Name,
+                    a.WinnerPlayerId,
+                    classLookup.GetValueOrDefault(a.WinnerPlayerId!.Value)),
+            RollCount = a.Rolls.Count
+        }).ToList();
     }
 
     private async Task<ItemDetailViewModel?> BuildItemDetailAsync(int itemId, CancellationToken cancellationToken)
@@ -454,6 +579,8 @@ public class OverviewController(
             .GroupBy(r => (r.RaidSessionId, r.PlayerId))
             .ToDictionary(g => g.Key, g => (DateTime?)g.Max(r => r.ReservedAt));
 
+        var softresNoteBySessionPlayer = SoftReserveLookups.NoteBySessionPlayerItem(softReserves);
+
         var rollBySessionPlayer = dropAwards
             .SelectMany(a => a.Rolls.Where(r => r.PlayerId.HasValue).Select(r => new
             {
@@ -508,7 +635,8 @@ public class OverviewController(
                 WeekNumber = r.RaidSession.RaidWeek.WeekNumber,
                 SessionId = r.RaidSessionId,
                 ReservedAt = r.ReservedAt,
-                BossSource = r.BossSource
+                BossSource = r.BossSource,
+                Note = r.Note
             }).ToList(),
             DropEvents = dropAwards.Select(a =>
             {
@@ -571,7 +699,8 @@ public class OverviewController(
                             r.AwardedToPlayerId,
                             classLookup.GetValueOrDefault(r.AwardedToPlayerId!.Value)),
                     RollAmount = roll?.RollAmount,
-                    RollClassification = roll?.Classification
+                    RollClassification = roll?.Classification,
+                    Note = softresNoteBySessionPlayer.TryGetValue((r.RaidSessionId, r.PlayerId, itemId), out var note) ? note : null
                 };
             }).ToList()
         };

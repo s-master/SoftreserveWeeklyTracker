@@ -8,6 +8,8 @@
   <data name="Nav_Upload" xml:space="preserve"><value>Upload</value></data>
   <data name="Nav_Players" xml:space="preserve"><value>Players</value></data>
   <data name="Nav_Items" xml:space="preserve"><value>Items</value></data>
+  <data name="Nav_Disenchanted" xml:space="preserve"><value>Disenchanted</value></data>
+  <data name="Nav_NonSrDrops" xml:space="preserve"><value>Non-SR drops</value></data>
   <data name="Nav_Archive" xml:space="preserve"><value>Archive</value></data>
   <data name="Nav_Debug" xml:space="preserve"><value>Debug</value></data>
   <data name="Nav_Language" xml:space="preserve"><value>Language</value></data>
@@ -44,8 +46,20 @@
   <data name="Debug_ImportsCleared" xml:space="preserve"><value>Import data cleared.</value></data>
   <data name="Debug_RosterDeleted" xml:space="preserve"><value>Roster deleted.</value></data>
   <data name="Session_Title" xml:space="preserve"><value>Session</value></data>
+  <data name="Session_Softres_Title" xml:space="preserve"><value>Softres</value></data>
+  <data name="Session_Softres_Subtitle" xml:space="preserve"><value>Reservations and +1 results for this session (Softres.it + Gargul).</value></data>
+  <data name="Session_LootLog_Title" xml:space="preserve"><value>Loot log</value></data>
+  <data name="Session_LootLog_Subtitle" xml:space="preserve"><value>All Gargul awards from this session in chronological order.</value></data>
+  <data name="Session_LootLog_Empty" xml:space="preserve"><value>No loot imported for this session.</value></data>
   <data name="Overview_Players_Title" xml:space="preserve"><value>Cumulative player overview (+1)</value></data>
   <data name="Overview_Items_Title" xml:space="preserve"><value>Item overview (+1)</value></data>
+  <data name="Overview_Disenchanted_Title" xml:space="preserve"><value>Disenchanted</value></data>
+  <data name="Overview_Disenchanted_Subtitle" xml:space="preserve"><value>Items marked as |de| in Gargul. Gargul does not store a specific enchanter player name.</value></data>
+  <data name="Overview_Disenchanted_Empty" xml:space="preserve"><value>No disenchanted items imported yet.</value></data>
+  <data name="Overview_NonSrDrops_Title" xml:space="preserve"><value>Non-SR drops</value></data>
+  <data name="Overview_NonSrDrops_Subtitle" xml:space="preserve"><value>Awarded in Gargul but not marked as a soft reserve win (e.g. materials, MS rolls without a reservation).</value></data>
+  <data name="Overview_NonSrDrops_Empty" xml:space="preserve"><value>No non-SR drops imported yet.</value></data>
+  <data name="NonSrDrops_ItemDropCount" xml:space="preserve"><value>Dropped {0} times</value></data>
   <data name="Item_ActivePlusOnes" xml:space="preserve"><value>Current +1</value></data>
   <data name="Item_SoftReserves" xml:space="preserve"><value>Soft reserve history</value></data>
   <data name="Item_NoSoftReserves" xml:space="preserve"><value>No soft reserve entries for this item.</value></data>
@@ -58,6 +72,8 @@
   <data name="Item_PlusOneHistory" xml:space="preserve"><value>+1 history per session</value></data>
   <data name="Item_NoPlusOneHistory" xml:space="preserve"><value>No +1 history for this item.</value></data>
   <data name="Col_Boss" xml:space="preserve"><value>Boss</value></data>
+  <data name="Col_Note" xml:space="preserve"><value>Note</value></data>
+  <data name="Col_RollCount" xml:space="preserve"><value>Rolls</value></data>
   <data name="Og_ItemDetail_Title" xml:space="preserve"><value>{0} – {1}</value></data>
   <data name="Og_ItemDetail_Description" xml:space="preserve"><value>{0} active +1, {1} drops, {2} soft res entries. Details, rolls and history.</value></data>
   <data name="Archive_Title" xml:space="preserve"><value>File archive</value></data>
@@ -75,6 +91,8 @@
   <data name="Col_File" xml:space="preserve"><value>File</value></data>
   <data name="Col_Type" xml:space="preserve"><value>Type</value></data>
   <data name="Action_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Action_Softres" xml:space="preserve"><value>Softres</value></data>
+  <data name="Action_LootLog" xml:space="preserve"><value>Loot</value></data>
   <data name="Action_Download" xml:space="preserve"><value>Download</value></data>
   <data name="Yes" xml:space="preserve"><value>Yes</value></data>
   <data name="No" xml:space="preserve"><value>No</value></data>
@@ -118,6 +136,10 @@
   <data name="Og_Players_Description" xml:space="preserve"><value>{0} players with active +1 reservations ({1} entries, total +{2}). Cumulative soft reserve standings for SSC &amp; TK.</value></data>
   <data name="Og_Items_Title" xml:space="preserve"><value>Item overview (+1) – {0}</value></data>
   <data name="Og_Items_Description" xml:space="preserve"><value>{0} items with open +1 reservations across {1} players ({2} entries). Soft reserve tracker for Nüsslisalat.</value></data>
+  <data name="Og_Disenchanted_Title" xml:space="preserve"><value>Disenchanted – {0}</value></data>
+  <data name="Og_Disenchanted_Description" xml:space="preserve"><value>{0} disenchanted items ({1} unique item IDs). Imported from Gargul exports.</value></data>
+  <data name="Og_NonSrDrops_Title" xml:space="preserve"><value>Non-SR drops – {0}</value></data>
+  <data name="Og_NonSrDrops_Description" xml:space="preserve"><value>{0} awards without a soft reserve win ({1} unique item IDs).</value></data>
   <data name="Og_Player_Title" xml:space="preserve"><value>{0} – {1}</value></data>
   <data name="Og_Player_Description" xml:space="preserve"><value>+1 balance, reservations and loot for {0}: {1} active +1, {2} items won.</value></data>
 </root>

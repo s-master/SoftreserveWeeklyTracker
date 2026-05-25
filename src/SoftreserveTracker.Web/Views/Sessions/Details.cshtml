@@ -6,8 +6,8 @@
 }
 
 <div class="page-header">
-    <h1 class="h2">@Localizer["Session_Title"] @session!.SessionDate.ToString("yyyy-MM-dd")</h1>
-    <p class="text-secondary mb-0">
+    <h1 class="h2">@Localizer["Session_Softres_Title"] @session!.SessionDate.ToString("yyyy-MM-dd")</h1>
+    <p class="text-secondary mb-2">
         <partial name="_RaidTypeBadge" model="session.RaidType.ToString()" />
         @if (!string.IsNullOrEmpty(session.SoftresId))
         {
@@ -19,6 +19,12 @@
             </span>
         }
     </p>
+    <p class="text-secondary small mb-3">@Localizer["Session_Softres_Subtitle"]</p>
+    <div class="session-view-tabs">
+        <span class="btn btn-sm btn-accent disabled" aria-current="page">@Localizer["Action_Softres"]</span>
+        <a class="btn btn-sm btn-outline-light"
+           href="@Url.Action("LootLog", "Sessions", new { token, id = session.Id })">@Localizer["Action_LootLog"]</a>
+    </div>
 </div>
 
 <div class="table-softres-wrap table-softres-scroll">
@@ -33,6 +39,7 @@
                 <th class="col-compact">@Localizer["Col_Received"]</th>
                 <th class="col-compact">@Localizer["Col_Dropped"]</th>
                 <th>@Localizer["Col_Reason"]</th>
+                <th class="col-nowrap">@Localizer["Col_Note"]</th>
                 <th class="col-compact">@Localizer["Col_AwardedTo"]</th>
             </tr>
         </thead>
@@ -48,6 +55,7 @@
                     <td class="col-compact">@(row.PlayerReceived ? Localizer["Yes"].Value : Localizer["No"].Value)</td>
                     <td class="col-compact">@(row.ItemDropped ? Localizer["Yes"].Value : Localizer["No"].Value)</td>
                     <td><partial name="_PlusOneReason" model="row.Reason" /></td>
+                    <td class="col-nowrap">@(string.IsNullOrWhiteSpace(row.Note) ? "-" : row.Note)</td>
                     <td class="col-compact">
                         @if (row.AwardedTo == null)
                         {

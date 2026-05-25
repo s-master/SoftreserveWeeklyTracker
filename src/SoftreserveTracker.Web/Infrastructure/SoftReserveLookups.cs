@@ -43,4 +43,12 @@ public static class SoftReserveLookups
                     var latest = g.OrderByDescending(r => r.ReservedAt).First();
                     return new PlayerClassInfo(latest.PlayerClass!, latest.Spec);
                 });
+
+    public static Dictionary<(int RaidSessionId, int PlayerId, int ItemId), string?> NoteBySessionPlayerItem(
+        IEnumerable<SoftReserve> rows) =>
+        rows.Where(r => !string.IsNullOrWhiteSpace(r.Note))
+            .GroupBy(r => (r.RaidSessionId, r.PlayerId, r.ItemId))
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(r => r.ReservedAt).First().Note);
 }

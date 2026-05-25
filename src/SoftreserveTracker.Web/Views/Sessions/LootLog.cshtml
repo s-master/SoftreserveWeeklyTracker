@@ -1,0 +1,112 @@
+@model SoftreserveTracker.Web.Models.ViewModels.SessionLootLogViewModel
+@{
+    ViewData["Title"] = Localizer["Session_LootLog_Title"];
+    var token = ViewBag.Token;
+}
+
+<div class="page-header">
+    <h1 class="h2">@Localizer["Session_LootLog_Title"] @Model.SessionDate.ToString("yyyy-MM-dd")</h1>
+    <p class="text-secondary mb-2">
+        <partial name="_RaidTypeBadge" model="Model.RaidType" />
+        @if (!string.IsNullOrEmpty(Model.SoftresId))
+        {
+            <span class="ms-2">
+                @Localizer["Col_SoftresId"]:
+                <a href="https://softres.it/raid/@Model.SoftresId"
+                   target="_blank"
+                   rel="noopener noreferrer">@Model.SoftresId</a>
+            </span>
+        }
+    </p>
+    <p class="text-secondary small mb-3">@Localizer["Session_LootLog_Subtitle"]</p>
+    <div class="session-view-tabs">
+        <a class="btn btn-sm btn-outline-light"
+           href="@Url.Action("Details", "Sessions", new { token, id = Model.SessionId })">@Localizer["Action_Softres"]</a>
+        <span class="btn btn-sm btn-accent disabled" aria-current="page">@Localizer["Action_LootLog"]</span>
+    </div>
+</div>
+
+@if (!Model.Drops.Any())
+{
+    <div class="alert alert-softres">@Localizer["Session_LootLog_Empty"]</div>
+}
+else
+{
+    @foreach (var drop in Model.Drops)
+    {
+        var hasRolls = drop.Rolls.Any();
+        <div class="card-softres item-drop-card p-3 mb-4">
+            <div class="item-drop-meta">
+                <div class="item-drop-meta-primary">
+                    <partial name="_ItemLink" model="drop.ItemId" />
+                    @if (drop.SoftReserveWin)
+                    {
+                        <span class="badge bg-success ms-1">SR</span>
+                    }
+                    @if (drop.IsDisenchanted)
+                    {
+                        <span class="badge bg-secondary ms-1">|de|</span>
+                    }
+                </div>
+                <div class="item-drop-meta-detail text-secondary">
+                    <i class="fa-regular fa-clock me-1" aria-hidden="true"></i>
+                    <span>@Localizer["Item_DroppedAt"] @drop.AwardedAt.ToString("g")</span>
+                </div>
+                @if (!hasRolls)
+                {
+                    <div class="item-drop-recipient ms-md-auto">
+                        <span class="text-secondary small d-block">@Localizer["Col_AwardedTo"]</span>
+                        @if (drop.Winner == null)
+                        {
+                            <span>-</span>
+                        }
+                        else if (drop.IsDisenchanted)
+                        {
+                            <span>|de|</span>
+                        }
+                        else
+                        {
+                            <partial name="_PlayerDisplay" model="drop.Winner" />
+                        }
+                    </div>
+                }
+            </div>
+            @if (hasRolls)
+            {
+                <div class="table-softres-wrap table-softres-scroll item-drop-rolls">
+                    <table class="table table-softres table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th class="col-compact">@Localizer["Col_Player"]</th>
+                                <th class="col-compact">@Localizer["Col_Roll"]</th>
+                                <th class="col-compact">@Localizer["Col_Classification"]</th>
+                                <th class="col-compact">@Localizer["Col_RolledAt"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var roll in drop.Rolls)
+                            {
+                                <tr class="@(roll.IsWinner ? "item-drop-winner-row" : null)">
+                                    <td class="col-compact">
+                                        @if (roll.IsWinner)
+                                        {
+                                            <i class="fa-solid fa-trophy text-warning me-1" title="@Localizer["Item_Winner"]" aria-hidden="true"></i>
+                                        }
+                                        <partial name="_PlayerDisplay" model="roll.Player" />
+                                    </td>
+                                    <td class="col-compact"><strong>@roll.RollAmount</strong></td>
+                                    <td class="col-compact"><partial name="_RollClassification" model="roll.Classification" /></td>
+                                    <td class="col-compact">@roll.RolledAt.ToString("g")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-secondary small mb-0 item-drop-no-rolls">@Localizer["Item_NoRollsForDrop"]</p>
+            }
+        </div>
+    }
+}

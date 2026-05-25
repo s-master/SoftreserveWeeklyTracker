@@ -25,6 +25,7 @@ public sealed class ReservationRowViewModel
     public string Reason { get; set; } = string.Empty;
     public PlayerDisplayViewModel? AwardedTo { get; set; }
     public int CurrentPlusOne { get; set; }
+    public string? Note { get; set; }
 }
 
 public sealed class ItemOverviewRowViewModel
@@ -35,6 +36,31 @@ public sealed class ItemOverviewRowViewModel
     public int CurrentPlusOne { get; set; }
     public bool HasReceived { get; set; }
     public DateTime? LastReservedAt { get; set; }
+}
+
+public sealed class DisenchantedOverviewRowViewModel
+{
+    public int ItemId { get; set; }
+    public string? ItemName { get; set; }
+    public DateTime SessionDate { get; set; }
+    public string RaidType { get; set; } = string.Empty;
+    public int WeekNumber { get; set; }
+    public int SessionId { get; set; }
+    public DateTime AwardedAt { get; set; }
+    public string AwardedToRaw { get; set; } = string.Empty;
+}
+
+public sealed class NonSrDropOverviewRowViewModel
+{
+    public int ItemId { get; set; }
+    public string? ItemName { get; set; }
+    public int ItemDropCount { get; set; }
+    public DateTime SessionDate { get; set; }
+    public string RaidType { get; set; } = string.Empty;
+    public int SessionId { get; set; }
+    public DateTime AwardedAt { get; set; }
+    public PlayerDisplayViewModel? Winner { get; set; }
+    public int RollCount { get; set; }
 }
 
 public sealed class PlayerLinkViewModel
@@ -100,6 +126,7 @@ public sealed class PlayerReservationHistoryRowViewModel
     public int SessionId { get; set; }
     public int? RollAmount { get; set; }
     public string? RollClassification { get; set; }
+    public string? Note { get; set; }
 }
 
 public sealed class PlayerLootWonRowViewModel
@@ -148,6 +175,7 @@ public sealed class ItemSoftReserveRowViewModel
     public int SessionId { get; set; }
     public DateTime ReservedAt { get; set; }
     public string? BossSource { get; set; }
+    public string? Note { get; set; }
 }
 
 public sealed class ItemDropEventViewModel
@@ -189,6 +217,7 @@ public sealed class ItemPlusOneHistoryRowViewModel
     public PlayerDisplayViewModel? AwardedTo { get; set; }
     public int? RollAmount { get; set; }
     public string? RollClassification { get; set; }
+    public string? Note { get; set; }
 }
 
 public sealed class SessionSummaryViewModel
@@ -198,6 +227,27 @@ public sealed class SessionSummaryViewModel
     public DateTime SessionDate { get; set; }
     public string? SoftresId { get; set; }
     public int WeekNumber { get; set; }
+}
+
+public sealed class SessionLootLogViewModel
+{
+    public int SessionId { get; set; }
+    public DateTime SessionDate { get; set; }
+    public string RaidType { get; set; } = string.Empty;
+    public string? SoftresId { get; set; }
+    public int WeekNumber { get; set; }
+    public List<SessionLootDropViewModel> Drops { get; set; } = [];
+}
+
+public sealed class SessionLootDropViewModel
+{
+    public int ItemId { get; set; }
+    public int LootAwardId { get; set; }
+    public DateTime AwardedAt { get; set; }
+    public PlayerDisplayViewModel? Winner { get; set; }
+    public bool SoftReserveWin { get; set; }
+    public bool IsDisenchanted { get; set; }
+    public List<ItemDropRollRowViewModel> Rolls { get; set; } = [];
 }
 
 public sealed class WeekSummaryViewModel
