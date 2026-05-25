@@ -95,7 +95,7 @@ When a Gargul group has the **same `softresID`** as an earlier session but **no 
 - Duplicate `(PlayerId, ItemId)` pairs are deduplicated
 - A warning is shown when carry-forward succeeds or when raid type / prior session mismatches
 
-**+1 evaluation:** carry-forward rows exist so each evening has session detail data, but **+1 is counted once per raid ID** (same `RaidWeek` + `softresID`), not once per evening. See `docs/PLUS_ONE_LOGIC.md`.
+**+1 evaluation:** carry-forward rows exist so each evening has session detail data, but **+1 is counted once per raid ID** (same `RaidWeek` + `RaidType`), not once per evening. See `docs/PLUS_ONE_LOGIC.md`.
 
 ### Bulk upload pairing
 
@@ -103,7 +103,7 @@ When several exports are uploaded at once, each Softres CSV is paired with a Gar
 
 ### Disenchant (`|de|`)
 
-Gargul awards to `|de|` set `IsDisenchanted = true` and have no winner player. The item still counts as **dropped**. Reservers who did not receive the item get **+1** for that session.
+Gargul awards to `|de|` set `IsDisenchanted = true` and have no winner player. The item still counts as **dropped** for that evening. Reservers who did not receive the item get **+1** once for that `(RaidWeek, RaidType)` group when the item drops (or on the last evening if it never dropped).
 
 ### Player names
 
@@ -120,11 +120,15 @@ All roster pages use prefix `/r/{token}`.
 | `/` | `Home` | Create roster |
 | `/r/{token}` | `Roster` | Dashboard: raid weeks & sessions |
 | `/r/{token}/upload` | `Upload` | Import form (GET/POST) |
-| `/r/{token}/sessions/{id}` | `Sessions` | Session detail (+1 delta, reason, cumulative +1) |
+| `/r/{token}/sessions/{id}` | `Sessions` | Softres & +1 results for that session (notes column) |
+| `/r/{token}/sessions/{id}/loot` | `Sessions` | Gargul loot log for that session (drops, rolls, SR/`\|de\|` badges) |
 | `/r/{token}/weeks/{id}` | `Weeks` | All reservation results in one raid week |
 | `/r/{token}/overview/players` | `Overview` | Cumulative +1 by player |
+| `/r/{token}/overview/players/{playerId}` | `Overview` | Player detail: +1, softres history, loot won, rolls |
 | `/r/{token}/overview/items` | `Overview` | Cumulative +1 by item |
 | `/r/{token}/overview/items/{itemId}` | `Overview` | Item detail: softres, drops, rolls, +1 history |
+| `/r/{token}/overview/disenchanted` | `Overview` | All `\|de\|` awards (no enchanter name in Gargul) |
+| `/r/{token}/overview/drops-without-sr` | `Overview` | Gargul awards without SR win (e.g. materials); grouped by item |
 | `/r/{token}/archive` | `Archive` | List uploaded source files |
 | `/r/{token}/archive/download/{id}` | `Archive` | Download archived file |
 | `/culture/set?culture=de\|en&returnUrl=…` | `Culture` | Set UI language cookie |
@@ -137,8 +141,12 @@ Order in `_Layout.cshtml`:
 1. Dashboard  
 2. Spieler / Players  
 3. Items  
-4. Upload  
-5. Archiv / Archive  
+4. Entzaubert / Disenchanted  
+5. Drops ohne SR / Non-SR drops  
+6. Upload  
+7. Archiv / Archive  
+
+Dashboard sessions table: links **Softres** (reservation matrix) and **Loot** (Gargul loot log) per evening.
 
 Language switch and (in Development only) Debug link are on the right.
 
@@ -161,9 +169,14 @@ Available when `ASPNETCORE_ENVIRONMENT=Development` **or** `Debug:Enabled=true` 
 | View | DataTables | Notes |
 |------|------------|-------|
 | Player overview | Yes, `ordering: false` | Only balances with `CurrentCount > 0`; **grouped by player** (name shown once per block) |
+| Player detail | Partial | Active +1, softres/+1 history (incl. notes), loot won, Gargul rolls |
 | Item overview | Yes | All `(player, item)` balances; **grouped by item**; search by **item** (ID + stored name + Wowhead) and **player name**; item links open **item detail**; includes “received” flag |
-| Item detail | Partial | Softres history, drop events with Gargul rolls, +1 history; Wowhead via header icon |
-| Session / week / archive | Yes | Standard sort/search |
+| Item detail | Partial | Softres history (notes), drop events with Gargul rolls, +1 history; bilingual Wowhead header |
+| Disenchanted | Yes | All `\|de\|` loot awards |
+| Drops without SR | Yes | Non-SR Gargul awards; **grouped by item**, sorted by drop count; `×N` badge when dropped more than once |
+| Session softres | Yes | +1 delta, reason, notes, cumulative +1; tab link to loot log |
+| Session loot log | No | Chronological drop cards with rolls; tab link to softres |
+| Week / archive | Yes | Standard sort/search |
 
 Tables use shared helper `initSoftresDataTable()` (`wwwroot/js/site.js`). Item names are shown via Wowhead tooltips (`Views/Shared/_ItemLink.cshtml`, opens in new tab). In the **item overview**, extra item search terms live in a hidden `.item-search-text` span; the **player column** is searchable by display name. Columns +1, Erhalten/Received, and Reserviert/Reserved are excluded from search. Item column uses `white-space: nowrap` with horizontal scroll if needed.
 
@@ -171,7 +184,7 @@ Tables use shared helper `initSoftresDataTable()` (`wwwroot/js/site.js`). Item n
 
 After every import, `RaidImportService.RecalculatePlusOneAsync()`:
 
-1. Loads all sessions for the roster (with raid week + softres ID)
+1. Loads all sessions for the roster (with raid week + raid type)
 2. Runs `PlusOneCalculator.Calculate()` — **one +1 delta per `(RaidWeek, RaidType, player, item)`**, not per raid evening
 3. Replaces all `SessionReservationResult` rows for those sessions
 4. Replaces all `PlusOneBalance` rows (only stores counts **> 0**)

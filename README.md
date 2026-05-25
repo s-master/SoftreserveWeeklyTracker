@@ -10,9 +10,11 @@ Web app for **Nüsslisalat** (TBC Anniversary) to track soft reserve +1 points a
 - 📅 Raid weeks (Wed 05:00 → next Wed 03:00, server local time)
 - 🏰 Raid type from CSV boss names or Gargul loot item IDs
 - 🔀 Split Gargul nights by `softresID` when SSC and TK run the same evening
-- ➕ +1 calculation per player and item, per roster
-- 📊 Session, week, player, and item overviews (DataTables; item view searchable by item name/ID and player name)
-- 🎲 Player page with roll history (MS/OS, roll amount)
+- ➕ +1 calculation per player and item, **once per raid ID** (`RaidWeek` + raid type), accumulated across raid IDs
+- 📊 Session softres/loot, week, player, and item overviews (DataTables; item view searchable by item name/ID and player name)
+- 🎲 Player page with roll history (MS/OS, roll amount); softres **notes** from CSV where present
+- 📦 Item detail (drops, rolls, softres/+1 history); **Entzaubert** and **Drops ohne SR** overview pages
+- 📋 Session **loot log** (full Gargul awards per evening, separate from softres matrix)
 - 📁 Archive of uploaded export files
 - 🔗 Roster links protected by GUID (no login)
 - 🌍 German/English UI, Wowhead TBC tooltips
