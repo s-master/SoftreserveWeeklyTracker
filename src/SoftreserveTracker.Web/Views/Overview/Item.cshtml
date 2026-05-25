@@ -8,31 +8,43 @@
     var isGerman = culture == "de";
     var wowheadHost = isGerman ? "de.wowhead.com" : "www.wowhead.com";
     var wowheadDomain = isGerman ? "de" : "www";
+    var wowheadAltDomain = isGerman ? "www" : "de";
+    var itemNameFallback = Model.ItemName ?? Model.ItemId.ToString();
+    var hasStoredEnglishName = !string.IsNullOrWhiteSpace(Model.ItemName);
 }
 
 <div class="page-header">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-2">
             <li class="breadcrumb-item"><a href="@Url.Action("Items", "Overview", new { token })">@Localizer["Nav_Items"]</a></li>
-            <li class="breadcrumb-item active">@(Model.ItemName ?? Model.ItemId.ToString())</li>
+            <li class="breadcrumb-item active"><span id="itemDetailBreadcrumbName">@itemNameFallback</span></li>
         </ol>
     </nav>
-    <h1 class="h2 mb-0 d-flex align-items-center gap-2 flex-wrap">
+    <h1 class="h2 mb-0 d-flex align-items-center gap-2 flex-wrap item-detail-header">
+        <span class="item-detail-names d-inline-flex align-items-baseline flex-wrap gap-2">
+            <a href="https://@wowheadHost/tbc/item=@Model.ItemId"
+               data-wowhead="item=@Model.ItemId&domain=@wowheadDomain"
+               class="item-link item-detail-name-primary"
+               id="itemDetailPrimaryName"
+               target="_blank"
+               rel="noopener noreferrer">@Model.ItemId</a>
+            <span class="item-detail-name-secondary text-secondary fw-normal"
+                  id="itemDetailSecondaryName">@(isGerman && hasStoredEnglishName ? Model.ItemName : "")</span>
+            <a href="https://@(wowheadAltDomain).wowhead.com/tbc/item=@Model.ItemId"
+               data-wowhead="item=@Model.ItemId&domain=@wowheadAltDomain"
+               class="item-detail-alt-link"
+               id="itemDetailAltName"
+               target="_blank"
+               rel="noopener noreferrer"
+               aria-hidden="true"
+               tabindex="-1">@Model.ItemId</a>
+        </span>
         <a href="https://@wowheadHost/tbc/item=@Model.ItemId"
-           data-wowhead="item=@Model.ItemId&domain=@wowheadDomain"
-           class="item-link item-detail-title"
-           target="_blank"
-           rel="noopener noreferrer">@Model.ItemId</a>
-        @if (!string.IsNullOrWhiteSpace(Model.ItemName))
-        {
-            <span class="text-secondary fw-normal">@Model.ItemName</span>
-        }
-        <a href="https://@wowheadHost/tbc/item=@Model.ItemId"
-           class="btn btn-sm btn-outline-light ms-1"
+           class="btn btn-sm btn-outline-light item-detail-external-link"
            target="_blank"
            rel="noopener noreferrer"
-           title="Wowhead">
-            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+           aria-label="Wowhead">
+            <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
         </a>
     </h1>
 </div>
@@ -275,7 +287,61 @@ else
             if ($('#plusOneHistoryTable tbody tr').length) initSoftresDataTable('#plusOneHistoryTable', { order: [[1, 'desc']] });
             if (window.$WowheadPower && typeof $WowheadPower.refreshLinks === 'function') {
                 $WowheadPower.refreshLinks(true);
+            } else if (window.WH && WH.Tooltip && typeof WH.Tooltip.refresh === 'function') {
+                WH.Tooltip.refresh();
             }
+
+            function readWowheadLinkName(linkId) {
+                var link = document.getElementById(linkId);
+                if (!link) {
+                    return null;
+                }
+
+                var name = link.textContent.trim();
+                return name && !/^\d+$/.test(name) ? name : null;
+            }
+
+            function syncItemDetailNames() {
+                var primaryName = readWowheadLinkName('itemDetailPrimaryName');
+                var secondary = document.getElementById('itemDetailSecondaryName');
+                var breadcrumb = document.getElementById('itemDetailBreadcrumbName');
+                var isDe = document.documentElement.lang === 'de';
+
+                if (primaryName && breadcrumb) {
+                    breadcrumb.textContent = primaryName;
+                }
+
+                if (primaryName) {
+                    var titleSuffix = document.title.indexOf(' - ');
+                    if (titleSuffix > 0) {
+                        document.title = primaryName + document.title.substring(titleSuffix);
+                    }
+                }
+
+                if (!isDe && secondary) {
+                    var altName = readWowheadLinkName('itemDetailAltName');
+                    if (altName) {
+                        secondary.textContent = altName;
+                    }
+                } else if (isDe && secondary && !secondary.textContent.trim()) {
+                    var altName = readWowheadLinkName('itemDetailAltName');
+                    if (altName) {
+                        secondary.textContent = altName;
+                    }
+                }
+
+                if (secondary) {
+                    var secondaryName = secondary.textContent.trim();
+                    if (!secondaryName || (primaryName && secondaryName.localeCompare(primaryName, undefined, { sensitivity: 'accent' }) === 0)) {
+                        secondary.hidden = true;
+                    } else {
+                        secondary.hidden = false;
+                    }
+                }
+            }
+
+            setTimeout(syncItemDetailNames, 400);
+            setTimeout(syncItemDetailNames, 1200);
         });
     </script>
 }
