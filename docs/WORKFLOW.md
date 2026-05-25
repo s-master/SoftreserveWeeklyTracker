@@ -88,12 +88,14 @@ If Gargul contains **multiple `softresID` values** (e.g. SSC + TK same night):
 
 ### Softres carry-forward
 
-When a Gargul group has the **same `softresID`** as an earlier session but **no new Softres CSV** is attached (e.g. SSC continues on a second evening):
+When a Gargul group has the **same `softresID`** as an earlier session but **no new Softres CSV** is attached (e.g. TK continues on a second evening):
 
 - Softres rows are copied from the **earliest prior session** with that `softresID` and the same raid type
 - Items the player **already received** (any prior loot award) are **not** copied
 - Duplicate `(PlayerId, ItemId)` pairs are deduplicated
 - A warning is shown when carry-forward succeeds or when raid type / prior session mismatches
+
+**+1 evaluation:** carry-forward rows exist so each evening has session detail data, but **+1 is counted once per raid ID** (same `RaidWeek` + `softresID`), not once per evening. See `docs/PLUS_ONE_LOGIC.md`.
 
 ### Bulk upload pairing
 
@@ -169,8 +171,8 @@ Tables use shared helper `initSoftresDataTable()` (`wwwroot/js/site.js`). Item n
 
 After every import, `RaidImportService.RecalculatePlusOneAsync()`:
 
-1. Loads all sessions for the roster (chronological)
-2. Runs `PlusOneCalculator.Calculate()`
+1. Loads all sessions for the roster (with raid week + softres ID)
+2. Runs `PlusOneCalculator.Calculate()` — **one +1 delta per `(RaidWeek, softresID, player, item)`**, not per raid evening
 3. Replaces all `SessionReservationResult` rows for those sessions
 4. Replaces all `PlusOneBalance` rows (only stores counts **> 0**)
 

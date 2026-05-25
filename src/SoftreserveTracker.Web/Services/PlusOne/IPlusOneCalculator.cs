@@ -28,6 +28,9 @@ public interface IPlusOneCalculator
 public sealed class PlusOneSessionInput
 {
     public int RaidSessionId { get; init; }
+    public int RaidWeekId { get; init; }
+    public DateTime RaidWeekPeriodStart { get; init; }
+    public string? SoftresId { get; init; }
     public DateTime SessionDate { get; init; }
     public required List<PlusOneReservationInput> Reservations { get; init; }
     public required List<PlusOneLootInput> Loot { get; init; }

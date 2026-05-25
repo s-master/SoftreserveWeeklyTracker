@@ -154,7 +154,7 @@ One row per Gargul loot event. Duplicate token drops produce **multiple rows** f
 
 ### SessionReservationResult
 
-Computed on each import recalculation: for each soft reserve in that session, the +1 delta, flags, reason, and optional `AwardedToPlayerId`. Persisted by `RaidImportService.RecalculatePlusOneAsync()`.
+Computed on each import recalculation: for each soft reserve visible in a session, flags, reason, optional `AwardedToPlayerId`, and the +1 delta. **At most one non-zero delta per `(RaidWeek, softresID, player, item)`** across multi-evening raids; interim evenings may show delta **0**. Persisted by `RaidImportService.RecalculatePlusOneAsync()`.
 
 ### PlusOneBalance
 
