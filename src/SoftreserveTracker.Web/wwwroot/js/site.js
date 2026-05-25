@@ -44,6 +44,18 @@
         refreshWowheadTooltips();
     }
 
+    document.addEventListener('click', function (e) {
+        const link = e.target.closest('a.item-link[data-item-detail-href]');
+        if (!link || e.defaultPrevented) {
+            return;
+        }
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) {
+            return;
+        }
+        e.preventDefault();
+        window.location.href = link.getAttribute('data-item-detail-href');
+    });
+
     window.initSoftresDataTable = function (selector, options) {
         const defaults = {
             pageLength: 100,

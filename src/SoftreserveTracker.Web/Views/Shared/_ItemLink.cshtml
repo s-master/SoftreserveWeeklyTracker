@@ -1,28 +1,29 @@
 @model int
 @using Microsoft.AspNetCore.Localization
+@using SoftreserveTracker.Web.Infrastructure
 @{
     var requestCulture = ViewContext.HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture;
     var culture = requestCulture?.UICulture?.TwoLetterISOLanguageName ?? "de";
-    var isGerman = culture == "de";
-    var wowheadHost = isGerman ? "de.wowhead.com" : "www.wowhead.com";
-    var wowheadDomain = isGerman ? "de" : "www";
     var token = ViewBag.Token;
     var linkToDetail = token != null && ViewBag.ItemLinkExternalOnly != true;
-    var href = linkToDetail
-        ? Url.Action("Item", "Overview", new { token, itemId = Model })!
-        : $"https://{wowheadHost}/tbc/item={Model}";
+    var wowheadHref = WowheadTbcLinks.ItemHref(Model, culture);
+    var detailHref = linkToDetail ? Url.Action("Item", "Overview", new { token, itemId = Model })! : null;
+    var extraClass = ViewBag.ItemLinkCssClass as string;
+    var linkClass = string.IsNullOrWhiteSpace(extraClass) ? "item-link" : $"item-link {extraClass}";
+    var linkId = ViewBag.ItemLinkId as string;
 }
-@if (linkToDetail)
-{
-    <a href="@href"
-       data-wowhead="item=@Model&domain=@wowheadDomain"
-       class="item-link">@Model</a>
-}
-else
-{
-    <a href="@href"
-       data-wowhead="item=@Model&domain=@wowheadDomain"
-       class="item-link"
-       target="_blank"
-       rel="noopener noreferrer">@Model</a>
-}
+<a href="@wowheadHref"
+   data-wowhead="@WowheadTbcLinks.ItemDataWowhead(Model, culture)"
+   class="@linkClass"
+   @if (!string.IsNullOrEmpty(linkId))
+   {
+       @:id="@linkId"
+   }
+   @if (detailHref != null)
+   {
+       @:data-item-detail-href="@detailHref"
+   }
+   @if (!linkToDetail)
+   {
+       @:target="_blank" rel="noopener noreferrer"
+   }>@Model</a>

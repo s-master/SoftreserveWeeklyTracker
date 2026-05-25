@@ -1,16 +1,15 @@
 @model SoftreserveTracker.Web.Models.ViewModels.ItemDetailViewModel
 @using Microsoft.AspNetCore.Localization
+@using SoftreserveTracker.Web.Infrastructure
 @{
     ViewData["Title"] = Model.ItemName ?? Model.ItemId.ToString();
     var token = ViewBag.Token;
     var requestCulture = ViewContext.HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture;
     var culture = requestCulture?.UICulture?.TwoLetterISOLanguageName ?? "de";
-    var isGerman = culture == "de";
-    var wowheadHost = isGerman ? "de.wowhead.com" : "www.wowhead.com";
-    var wowheadDomain = isGerman ? "de" : "www";
-    var wowheadAltDomain = isGerman ? "www" : "de";
     var itemNameFallback = Model.ItemName ?? Model.ItemId.ToString();
-    var hasStoredEnglishName = !string.IsNullOrWhiteSpace(Model.ItemName);
+    ViewBag.ItemLinkExternalOnly = true;
+    ViewBag.ItemLinkCssClass = "item-detail-title";
+    ViewBag.ItemLinkId = "itemDetailTitleLink";
 }
 
 <div class="page-header">
@@ -21,25 +20,12 @@
         </ol>
     </nav>
     <h1 class="h2 mb-0 d-flex align-items-center gap-2 flex-wrap item-detail-header">
-        <span class="item-detail-names d-inline-flex align-items-baseline flex-wrap gap-2">
-            <a href="https://@wowheadHost/tbc/item=@Model.ItemId"
-               data-wowhead="item=@Model.ItemId&domain=@wowheadDomain"
-               class="item-link item-detail-name-primary"
-               id="itemDetailPrimaryName"
-               target="_blank"
-               rel="noopener noreferrer">@Model.ItemId</a>
-            <span class="item-detail-name-secondary text-secondary fw-normal"
-                  id="itemDetailSecondaryName">@(isGerman && hasStoredEnglishName ? Model.ItemName : "")</span>
-            <a href="https://@(wowheadAltDomain).wowhead.com/tbc/item=@Model.ItemId"
-               data-wowhead="item=@Model.ItemId&domain=@wowheadAltDomain"
-               class="item-detail-alt-link"
-               id="itemDetailAltName"
-               target="_blank"
-               rel="noopener noreferrer"
-               aria-hidden="true"
-               tabindex="-1">@Model.ItemId</a>
-        </span>
-        <a href="https://@wowheadHost/tbc/item=@Model.ItemId"
+        <partial name="_ItemLink" model="Model.ItemId" />
+        @if (!string.IsNullOrWhiteSpace(Model.ItemName))
+        {
+            <span class="item-detail-name-secondary text-secondary fw-normal">@Model.ItemName</span>
+        }
+        <a href="@WowheadTbcLinks.ItemHref(Model.ItemId, culture)"
            class="btn btn-sm btn-outline-light item-detail-external-link"
            target="_blank"
            rel="noopener noreferrer"
@@ -293,57 +279,30 @@ else
                 WH.Tooltip.refresh();
             }
 
-            function readWowheadLinkName(linkId) {
-                var link = document.getElementById(linkId);
+            function syncItemDetailTitle() {
+                var link = document.getElementById('itemDetailTitleLink');
+                var breadcrumb = document.getElementById('itemDetailBreadcrumbName');
                 if (!link) {
-                    return null;
+                    return;
                 }
 
                 var name = link.textContent.trim();
-                return name && !/^\d+$/.test(name) ? name : null;
-            }
-
-            function syncItemDetailNames() {
-                var primaryName = readWowheadLinkName('itemDetailPrimaryName');
-                var secondary = document.getElementById('itemDetailSecondaryName');
-                var breadcrumb = document.getElementById('itemDetailBreadcrumbName');
-                var isDe = document.documentElement.lang === 'de';
-
-                if (primaryName && breadcrumb) {
-                    breadcrumb.textContent = primaryName;
+                if (!name || /^\d+$/.test(name)) {
+                    return;
                 }
 
-                if (primaryName) {
-                    var titleSuffix = document.title.indexOf(' - ');
-                    if (titleSuffix > 0) {
-                        document.title = primaryName + document.title.substring(titleSuffix);
-                    }
+                if (breadcrumb) {
+                    breadcrumb.textContent = name;
                 }
 
-                if (!isDe && secondary) {
-                    var altName = readWowheadLinkName('itemDetailAltName');
-                    if (altName) {
-                        secondary.textContent = altName;
-                    }
-                } else if (isDe && secondary && !secondary.textContent.trim()) {
-                    var altName = readWowheadLinkName('itemDetailAltName');
-                    if (altName) {
-                        secondary.textContent = altName;
-                    }
-                }
-
-                if (secondary) {
-                    var secondaryName = secondary.textContent.trim();
-                    if (!secondaryName || (primaryName && secondaryName.localeCompare(primaryName, undefined, { sensitivity: 'accent' }) === 0)) {
-                        secondary.hidden = true;
-                    } else {
-                        secondary.hidden = false;
-                    }
+                var titleSuffix = document.title.indexOf(' - ');
+                if (titleSuffix > 0) {
+                    document.title = name + document.title.substring(titleSuffix);
                 }
             }
 
-            setTimeout(syncItemDetailNames, 400);
-            setTimeout(syncItemDetailNames, 1200);
+            setTimeout(syncItemDetailTitle, 400);
+            setTimeout(syncItemDetailTitle, 1200);
         });
     </script>
 }

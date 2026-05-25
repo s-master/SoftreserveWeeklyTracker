@@ -1,12 +1,10 @@
 @model SoftreserveTracker.Web.Models.ViewModels.PlayerDisplayViewModel
 @using Microsoft.AspNetCore.Localization
+@using SoftreserveTracker.Web.Infrastructure
 @using SoftreserveTracker.Web.Services.Players
 @{
     var requestCulture = ViewContext.HttpContext.Features.Get<IRequestCultureFeature>()?.RequestCulture;
     var culture = requestCulture?.UICulture?.TwoLetterISOLanguageName ?? "de";
-    var isGerman = culture == "de";
-    var wowheadHost = isGerman ? "de.wowhead.com" : "www.wowhead.com";
-    var wowheadDomain = isGerman ? "de" : "www";
     var token = ViewBag.Token;
     var classMeta = WowClassCatalog.Resolve(Model.PlayerClass);
     var classLabel = WowClassCatalog.DisplayClassName(Model.PlayerClass);
@@ -22,8 +20,8 @@
     {
         if (Model.LinkClassIcon)
         {
-            <a href="https://@wowheadHost/tbc/class=@classMeta.Slug"
-               data-wowhead="class=@classMeta.Id&domain=@wowheadDomain"
+            <a href="@WowheadTbcLinks.ClassHref(classMeta.Slug, culture)"
+               data-wowhead="@WowheadTbcLinks.ClassDataWowhead(classMeta.Id, culture)"
                class="class-icon-link"
                title="@classLabel">
                 <img src="@WowClassCatalog.IconUrl(classMeta.Slug)"
