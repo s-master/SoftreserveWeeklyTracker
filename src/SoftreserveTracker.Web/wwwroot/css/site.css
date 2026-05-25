@@ -446,7 +446,7 @@ footer {
     font-weight: inherit;
 }
 
-/* Slightly wider than Bootstrap xxl (1400px) — fits wide DataTables without inner scroll */
+/* Slightly wider than Bootstrap xxl (1400px); wide tables scroll inside .table-softres-scroll */
 .container-app {
     width: min(100%, 1600px);
     margin-left: auto;
@@ -460,7 +460,9 @@ footer {
 }
 
 .table-softres-scroll {
-    overflow: visible;
+    overflow-x: auto;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
 }
 
 .table-softres {
@@ -468,19 +470,13 @@ footer {
 }
 
 .dataTables_wrapper {
-    overflow: visible;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .dataTables_wrapper .dataTables_scrollBody {
-    overflow: visible !important;
+    overflow-x: auto !important;
     max-height: none !important;
-}
-
-@media (max-width: 991.98px) {
-    .table-softres-scroll {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
 }
 
 .table-softres th,

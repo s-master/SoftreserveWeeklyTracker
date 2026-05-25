@@ -57,7 +57,6 @@ else
                     <th class="col-compact">@Localizer["Col_Raid"]</th>
                     <th class="col-item">@Localizer["Col_Item"]</th>
                     <th class="col-compact">@Localizer["Col_ReservedAt"]</th>
-                    <th class="col-nowrap">@Localizer["Col_Note"]</th>
                     <th class="col-compact">@Localizer["Col_Dropped"]</th>
                     <th class="col-compact">@Localizer["Col_Received"]</th>
                     <th class="col-compact">@Localizer["Col_Roll"]</th>
@@ -80,7 +79,6 @@ else
                         </td>
                         <td class="col-item"><partial name="_ItemLink" model="row.ItemId" /></td>
                         <td class="col-compact">@(row.ReservedAt?.ToString("g") ?? "-")</td>
-                        <td class="col-nowrap">@(string.IsNullOrWhiteSpace(row.Note) ? "-" : row.Note)</td>
                         <td class="col-compact">@(row.ItemDropped ? Localizer["Yes"].Value : Localizer["No"].Value)</td>
                         <td class="col-compact">@(row.PlayerReceived ? Localizer["Yes"].Value : Localizer["No"].Value)</td>
                         <td class="col-compact">
